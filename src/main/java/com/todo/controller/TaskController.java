@@ -1,7 +1,7 @@
 package com.todo.controller;
 
 import com.todo.entity.Task;
-import com.todo.repository.TaskRepository;
+import com.todo.service.TaskService;
 import com.todo.web.dto.CreateTaskRequest;
 import com.todo.web.dto.UpdateTaskRequest;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -23,33 +22,24 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TaskController {
 
-    private final TaskRepository repo;
+    public final TaskService taskService;
 
     // LIST (only non-deleted)
     @GetMapping
-    public List<Task> list() {
-        return repo.findAllByDeletedFalseOrderByCreatedAtDesc();
+    public List<Task> listTasks() {
+        return taskService.listTasks();
     }
 
     // GET by id (404 if deleted or not found)
     @GetMapping("/{id}")
-    public ResponseEntity<Task> get(@PathVariable UUID id) {
-        return repo.findByIdAndDeletedFalse(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public Task getTaskById(@PathVariable UUID id) {
+        return taskService.getTaskById(id);
     }
 
     // CREATE
     @PostMapping
-    public ResponseEntity<Task> create(@Validated @RequestBody CreateTaskRequest req) {
-        Task t = new Task();
-        t.setTaskName(req.getTaskName());
-        t.setTaskDesc(req.getTaskDesc());
-        t.setCompleted(false);
-        t.setDeleted(false);
-        t.setCreatedAt(Instant.now());
-
-        Task saved = repo.save(t);
+    public ResponseEntity<Task> createTask(@Validated @RequestBody CreateTaskRequest req) {
+        Task saved = taskService.createTask(req.getTaskName(), req.getTaskDesc());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -61,46 +51,28 @@ public class TaskController {
 
     // UPDATE (idempotent PUT; only apply non-null fields)
     @PutMapping("/{id}")
-    public Optional<ResponseEntity<Task>> update(@PathVariable UUID id, @Validated @RequestBody UpdateTaskRequest req) {
-        return Optional.of(repo.findByIdAndDeletedFalse(id)
-                .map(existing -> {
-                    if (req.getTaskName() != null) existing.setTaskName(req.getTaskName());
-                    if (req.getTaskDesc() != null) existing.setTaskDesc(req.getTaskDesc());
-                    if (req.getCompleted() != null) existing.setCompleted(req.getCompleted());
+    public Task updateTask(@PathVariable UUID id, @Validated @RequestBody UpdateTaskRequest req) {
+        return taskService.updateTask(id, req.getTaskName(), req.getTaskDesc(), req.getCompleted());
+    }
 
-                    Task saved = repo.save(existing);
-                    return ResponseEntity.ok(saved);
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build()));
+    // PATCH completion: /tasks/{id}/complete?value=true|false
+    @PatchMapping("/{id}/complete")
+    public Task setCompleted(@PathVariable UUID id, @RequestParam("value") boolean value) {
+        return taskService.setCompleted(id, value);
     }
 
 
     // SOFT DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable UUID id) {
-        return repo.findByIdAndDeletedFalse(id)
-                .map(existing -> {
-                    existing.setDeleted(true);
-                    repo.save(existing);
-                    return ResponseEntity.noContent().build();
-                })
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
     }
 
     // Insert a mock task
     @PostMapping({"/mock", "/mock/"})
     public Task insertMock() {
-        Task t = Task.builder()
-                .taskName("Mock Task")
-                .taskDesc("This is a mock task inserted for testing.")
-                .completed(false)
-                .deleted(false)
-                .createdAt(Instant.now())
-                .build();
-
-        Task saved = repo.save(t);
-        log.info("[TaskController] Inserted: {}", saved);
-        return saved;
+        return taskService.insertMock();
     }
 
 //    // Get all tasks
