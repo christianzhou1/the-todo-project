@@ -80,7 +80,7 @@ This stops the container but preserves data in the Docker volume.
 To fully reset the database, remove the volume:
 
 ```bash
-docker volume rm postgres-data
+docker volume rm todo_postgres-data
 ```
 
 ---
