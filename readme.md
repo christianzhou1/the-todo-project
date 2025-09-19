@@ -19,15 +19,31 @@ It provides REST APIs for creating and managing tasks.
 
 ## 🚀 Getting Started
 
-### Rebuild docker compose:
+### Build docker compose:
 
-docker build -t todo-backend . (remember the dot)
+```bash
+docker build -t todo-backend . 
+```
+(remember the dot)
+
+```bash
 docker compose up -d
+```
 
 ### Docker logs:
 
+```bash
 docker compose logs -f todo-backend
+```
+
+### Hot reload:
+
+```bash
+.\mvnw spring-boot:run
+```
 
 ### Mock Insert Task:
 
+```bash
 wget http://localhost:8080/api/tasks/mock -Method POST    
+```
