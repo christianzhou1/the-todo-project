@@ -34,14 +34,19 @@ It provides REST APIs for creating and managing tasks. Database schema is versio
 
 ### 1\. Create network and volume (first run only)
 
-```lua
+```bash
 docker network create todo-net
+```
+
+- this is for if you want to explicitly define the volume - otherwise, do not run this, and check `docker volume ls` after everything's built to see what the current volumes are
+
+```bash
 docker volume create postgres-data
 ```
 
 ### 2\. Start the database container
 
-```nginx
+```bash
 docker compose up -d todo-db
 ```
 
@@ -58,13 +63,13 @@ with user `user-todo` and password `todo123`.
 
 On macOS/Linux:
 
-```arduino
+```bash
 ./mvnw spring-boot:run
 ```
 
 On Windows PowerShell:
 
-```arduino
+```bash
 .\mvnw spring-boot:run
 ```
 
@@ -72,7 +77,7 @@ The app will be available at `http://localhost:8080/api/tasks`.
 
 ### 4\. Stop services
 
-```nginx
+```bash
 docker compose down
 ```
 
@@ -80,7 +85,7 @@ This stops the container but preserves data in the Docker volume.
 To fully reset the database, remove the volume:
 
 ```bash
-docker volume rm postgres-data
+docker volume rm todo_postgres-data
 ```
 
 ---
