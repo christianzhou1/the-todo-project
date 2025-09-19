@@ -19,10 +19,15 @@ It provides REST APIs for creating and managing tasks.
 
 ## 🚀 Getting Started
 
-### 1. Run everything in Docker
+### Rebuild docker compose:
 
-This spins up both the backend and PostgreSQL.
+docker build -t todo-backend . (remember the dot)
+docker compose up -d
 
-```bash
-docker compose up --build
-```
+### Docker logs:
+
+docker compose logs -f todo-backend
+
+### Mock Insert Task:
+
+wget http://localhost:8080/api/tasks/mock -Method POST    
