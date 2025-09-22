@@ -28,11 +28,12 @@ public class PaginationUtils {
         String field = "createdAt";
         Sort.Direction dir = Sort.Direction.DESC;
 
-        // Parse the 'sort' parameter if provided, e.g. "taskName, asc"
+        // Parse the 'sort' parameter if provided, e.g. "title, asc"
+        // Parse the 'sort' parameter if provided, e.g. "title, asc"
         if (sort != null && !sort.isBlank()) {
             String[] parts = sort.split(",", 2);
 
-            // first part = field name e.g. "taskName", if blank -> default "createdAt"
+            // first part = field name e.g. "title", if blank -> default "createdAt"
             field = parts[0].trim().isEmpty() ? field : parts[0].trim();
 
             // second part = direction - asc or desc

@@ -13,14 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
 
 @Slf4j
 @RestController
@@ -54,7 +50,7 @@ public class TaskController {
     // CREATE
     @PostMapping
     public ResponseEntity<Task> createTask(@Validated @RequestBody CreateTaskRequest req) {
-        Task saved = taskService.createTask(req.getTaskName(), req.getTaskDesc());
+        Task saved = taskService.createTask(req.getTitle(), req.getDescription());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -67,7 +63,7 @@ public class TaskController {
     // UPDATE (idempotent PUT; only apply non-null fields)
     @PutMapping("/{id}")
     public Task updateTask(@PathVariable UUID id, @Validated @RequestBody UpdateTaskRequest req) {
-        return taskService.updateTask(id, req.getTaskName(), req.getTaskDesc(), req.getCompleted());
+        return taskService.updateTask(id, req.getTitle(), req.getDescription(), req.getIsCompleted());
     }
 
     // PATCH completion: /tasks/{id}/complete?value=true|false

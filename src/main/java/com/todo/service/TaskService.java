@@ -10,7 +10,7 @@ public interface TaskService {
 
     // CRUD operations
 
-    Task createTask(String taskName, String taskDesc);
+    Task createTask(String title, String description);
 
     Task getTaskById(UUID id);
 
@@ -19,9 +19,9 @@ public interface TaskService {
 
     void deleteTask(UUID id);
 
-    Task updateTask(UUID id, String taskName, String taskDesc, Boolean completed);
+    Task updateTask(UUID id, String title, String description, Boolean isComplete);
 
-    Task setCompleted(UUID id, Boolean completed);
+    Task setCompleted(UUID id, Boolean isComplete);
 
     Task insertMock();
 

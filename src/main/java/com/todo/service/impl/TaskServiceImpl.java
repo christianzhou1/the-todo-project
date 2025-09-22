@@ -24,13 +24,13 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<Task> listTasks() {
-        return repo.findAllByDeletedFalseOrderByCreatedAtDesc();
+        return repo.findAllByIsDeletedFalseOrderByCreatedAtDesc();
     }
 
     // paginated tasks
     @Override
     public Page<Task> listTasks(int page, int size, String sort) {
-        return repo.findAllByDeletedFalse(PaginationUtils.buildPageable(page, size, sort));
+        return repo.findAllByIsDeletedFalse(PaginationUtils.buildPageable(page, size, sort));
     }
 
     @Override
@@ -51,23 +51,23 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public Task createTask(String taskName, String taskDesc) {
+    public Task createTask(String title, String taskDesc) {
         Task t = Task.builder()
-                .taskName(taskName)
-                .taskDesc(taskDesc)
+                .title(title)
+                .description(taskDesc)
                 .createdAt(Instant.now())
-                .completed(false)
-                .deleted(false)
+                .isCompleted(false)
+                .isDeleted(false)
                 .build();
         return repo.save(t);
     }
 
     @Override
     @Transactional
-    public Task updateTask(UUID id, String taskName, String taskDesc, Boolean completed) {
+    public Task updateTask(UUID id, String title, String taskDesc, Boolean completed) {
         Task t = getTaskById(id);
-        if (taskName != null) t.setTaskName(taskName);
-        if (taskDesc != null) t.setTaskDesc(taskDesc);
+        if (title != null) t.setTitle(title);
+        if (taskDesc != null) t.setDescription(taskDesc);
         if (completed != null) t.setCompleted(completed);
         return repo.save(t);
     }

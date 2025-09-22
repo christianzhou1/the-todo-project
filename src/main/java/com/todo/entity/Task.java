@@ -21,18 +21,21 @@ public class Task {
     @UuidGenerator
     private UUID id;
 
-    @Column(name = "task_name", nullable = false, length = 255)
-    private String taskName;
+    @Column(name = "title", nullable = false, length = 255)
+    private String title;
 
-    @Column(name = "task_desc")
-    private String taskDesc;
+    @Column(name = "description")
+    private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "is_completed", nullable = false)
-    private boolean completed;
+    private boolean isCompleted;
 
-    @Column(name = "is_delete", nullable = false)
-    private boolean deleted;
+    @Column(name = "due_date", nullable = true, updatable = true)
+    private Instant dueDate;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
 }
