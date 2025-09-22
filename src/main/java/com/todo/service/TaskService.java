@@ -15,7 +15,6 @@ public interface TaskService {
     Task getTaskById(UUID id);
 
     List<Task> listTasks();
-
     Page<Task> listTasks(int page, int size, String sort);
 
     void deleteTask(UUID id);
@@ -25,4 +24,7 @@ public interface TaskService {
     Task setCompleted(UUID id, Boolean completed);
 
     Task insertMock();
+
+    List<Task> listAllTasks();
+    Page<Task> listAllTasks(int page, int size, String sort);
 }
