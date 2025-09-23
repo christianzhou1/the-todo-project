@@ -46,6 +46,13 @@ public class AttachmentController {
         return ResponseEntity.ok(attachmentService.listByTask(taskId));
     }
 
+
+    /** Attach an existing unlinked attachment to a task */
+    @PostMapping("/{id}/attach/{taskId}")
+    public ResponseEntity<AttachmentInfo> attach(@PathVariable UUID id, @PathVariable UUID taskId) {
+        return ResponseEntity.ok(attachmentService.attach(id, taskId));
+    }
+
     /** detach from its task (keeps file and metadata)
      *
      */
