@@ -8,7 +8,7 @@ import com.todo.repository.AttachmentRepository;
 import com.todo.repository.TaskRepository;
 import com.todo.service.TaskService;
 import com.todo.util.PaginationUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
@@ -26,7 +26,6 @@ import java.util.UUID;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository repo;
