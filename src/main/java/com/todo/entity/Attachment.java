@@ -18,6 +18,9 @@ public class Attachment {
     @GeneratedValue @UuidGenerator
     private UUID id;
 
+    @JoinColumn(name = "user_id", nullable = false)
+    private UUID userId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name="task_id")
     private Task task; // nullable, can be unlinked
@@ -44,6 +47,12 @@ public class Attachment {
     private Instant updatedAt;
 
     @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
     void preUpdate() {
         updatedAt = Instant.now();
     }

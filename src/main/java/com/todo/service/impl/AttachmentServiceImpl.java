@@ -4,8 +4,10 @@ import com.todo.api.dto.AttachmentInfo;
 import com.todo.api.mapper.AttachmentMapper;
 import com.todo.entity.Attachment;
 import com.todo.entity.Task;
+import com.todo.entity.User;
 import com.todo.repository.AttachmentRepository;
 import com.todo.repository.TaskRepository;
+import com.todo.repository.UserRepository;
 import com.todo.service.AttachmentService;
 import com.todo.service.TaskService;
 import com.todo.storage.BlobStorage;
@@ -32,15 +34,17 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     private final AttachmentRepository attachmentRepo;
     private final TaskRepository taskRepo;
+    private final UserRepository userRepository;
     private final BlobStorage blobStorage;
 
     @Override
-    public AttachmentInfo uploadUnlinked(MultipartFile file) throws IOException {
+    public AttachmentInfo uploadUnlinked(MultipartFile file, UUID userId) throws IOException {
         try {
             var stored = blobStorage.store(file.getInputStream(),
                     file.getOriginalFilename(), file.getContentType(), file.getSize());
 
             Attachment a = Attachment.builder()
+                    .userId(userId)
                     .filename(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file")
                     .contentType(stored.getContentType())
                     .sizeBytes(stored.getSize())
@@ -62,15 +66,19 @@ public class AttachmentServiceImpl implements AttachmentService {
 
 
     @Override
-    public AttachmentInfo uploadAndAttach(UUID taskId, MultipartFile file) throws IOException {
+    public AttachmentInfo uploadAndAttach(UUID taskId, MultipartFile file, UUID userId) throws IOException {
         try {
-            Task task = taskRepo.findById(taskId)
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            
+            Task task = taskRepo.findByIdAndUserAndIsDeletedFalse(taskId, user)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
 
             var stored = blobStorage.store(file.getInputStream(),
                     file.getOriginalFilename(), file.getContentType(), file.getSize());
 
             Attachment a = Attachment.builder()
+                    .userId(userId)
                     .task(task)
                     .filename(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file")
                     .contentType(stored.getContentType())
@@ -93,20 +101,28 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
-    public List<AttachmentInfo> listByTask(UUID taskId) {
-        return attachmentRepo.findByTask_Id(taskId).stream()
+    public List<AttachmentInfo> listByTask(UUID taskId, UUID userId) {
+        return attachmentRepo.findByUserIdAndTask_Id(userId, taskId).stream()
                 .map(AttachmentMapper::toInfo)
                 .toList();
     }
 
 
     @Override
-    public AttachmentInfo attach(UUID attachmentId, UUID taskId) {
+    public AttachmentInfo attach(UUID attachmentId, UUID taskId, UUID userId) {
         try {
             Attachment a = attachmentRepo.findById(attachmentId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
 
-            Task t = taskRepo.findById(taskId)
+            // Verify attachment belongs to user
+            if (!a.getUserId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
+            }
+
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+            
+            Task t = taskRepo.findByIdAndUserAndIsDeletedFalse(taskId, user)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
 
             a.setTask(t);
@@ -121,10 +137,15 @@ public class AttachmentServiceImpl implements AttachmentService {
 
 
     @Override
-    public AttachmentInfo detach(UUID attachmentId) {
+    public AttachmentInfo detach(UUID attachmentId, UUID userId) {
         try {
             Attachment a = attachmentRepo.findById(attachmentId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+
+            // Verify attachment belongs to user
+            if (!a.getUserId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
+            }
             a.setTask(null);
             return AttachmentMapper.toInfo(a);
         } catch (ResponseStatusException e) {
@@ -137,10 +158,16 @@ public class AttachmentServiceImpl implements AttachmentService {
 
 
     @Override
-    public void delete(UUID attachmentId) {
+    public void delete(UUID attachmentId, UUID userId) {
         try {
             Attachment a = attachmentRepo.findById(attachmentId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+
+            // Verify attachment belongs to user
+            if (!a.getUserId().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
+            }
+
             try {
                 blobStorage.delete(a.getStoragePath());
             } catch (IOException io) {
@@ -158,17 +185,29 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
-    public byte[] loadBytes(UUID attachmentId) throws IOException {
+    public byte[] loadBytes(UUID attachmentId, UUID userId) throws IOException {
         Attachment a = attachmentRepo.findById(attachmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+
+        // Verify attachment belongs to user
+        if (!a.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
+        }
+
         return blobStorage.load(a.getStoragePath());
     }
 
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
-    public AttachmentInfo getInfo(UUID attachmentId) {
+    public AttachmentInfo getInfo(UUID attachmentId, UUID userId) {
         Attachment a = attachmentRepo.findById(attachmentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Attachment not found"));
+
+        // Verify attachment belongs to user
+        if (!a.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
+        }
+
         return AttachmentMapper.toInfo(a);
     }
 }

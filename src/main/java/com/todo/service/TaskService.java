@@ -2,6 +2,7 @@ package com.todo.service;
 
 import com.todo.api.dto.TaskDetailInfo;
 import com.todo.entity.Task;
+import com.todo.entity.User;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
@@ -9,29 +10,28 @@ import java.util.UUID;
 
 public interface TaskService {
 
-
-    TaskDetailInfo getTaskDetail(UUID id);
+    TaskDetailInfo getTaskDetail(UUID id, UUID userId);
 
     // CRUD operations
 
-    Task createTask(String title, String description);
+    Task createTask(String title, String description, UUID userId);
 
-    Task getTaskById(UUID id);
+    Task getTaskById(UUID id, UUID userId);
 
-    List<Task> listTasks();
-    Page<Task> listTasks(int page, int size, String sort);
+    List<Task> listTasks(UUID userId);
+    Page<Task> listTasks(UUID userId, int page, int size, String sort);
 
-    void deleteTask(UUID id);
+    void deleteTask(UUID id, UUID userId);
 
-    Task updateTask(UUID id, String title, String description, Boolean isComplete);
+    Task updateTask(UUID id, String title, String description, Boolean isComplete, UUID userId);
 
-    Task setCompleted(UUID id, Boolean isComplete);
+    Task setCompleted(UUID id, Boolean isComplete, UUID userId);
 
-    Task insertMock();
+    Task insertMock(UUID userId);
 
-    List<Task> listAllTasks();
+    List<Task> listAllTasks(UUID userId);
 //    Page<Task> listAllTasks(int page, int size, String sort);
 
-    List<TaskDetailInfo> listAllTaskDetails();
+    List<TaskDetailInfo> listAllTaskDetails(UUID userId);
     // Page<TaskDetailInfo> listAllTaskDetails(int page, int size, String sort);
 }

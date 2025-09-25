@@ -4,8 +4,10 @@ import com.todo.api.dto.TaskDetailInfo;
 import com.todo.api.mapper.AttachmentMapper;
 import com.todo.api.mapper.TaskMapper;
 import com.todo.entity.Task;
+import com.todo.entity.User;
 import com.todo.repository.AttachmentRepository;
 import com.todo.repository.TaskRepository;
+import com.todo.repository.UserRepository;
 import com.todo.service.TaskService;
 import com.todo.util.PaginationUtils;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +32,7 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository repo;
     private final AttachmentRepository attachmentRepo;
+    private final UserRepository userRepository;
 
     private TaskDetailInfo toTaskDetail(Task task) {
 
@@ -59,7 +62,7 @@ public class TaskServiceImpl implements TaskService {
         taskDetailInfo.setCategories(Collections.emptyList());
         taskDetailInfo.setComments(Collections.emptyList());
 
-        var attInfos = attachmentRepo.findByTask_Id(task.getId())
+        var attInfos = attachmentRepo.findByTaskId(task.getId())
                         .stream().map(AttachmentMapper::toInfo).toList();
         taskDetailInfo.setAttachments(attInfos);
 
@@ -68,10 +71,10 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskDetailInfo getTaskDetail(UUID id) {
+    public TaskDetailInfo getTaskDetail(UUID id, UUID userId) {
         try {
             // get base task (entity -> DTO base)
-            Task task = repo.findById(id)
+            Task task = repo.findByIdAndUserIdAndIsDeletedFalse(id, userId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             // convert to task detail
             return toTaskDetail(task);
@@ -82,19 +85,19 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<Task> listTasks() {
-        return repo.findAllByIsDeletedFalseOrderByCreatedAtDesc();
+    public List<Task> listTasks(UUID userId) {
+        return repo.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId);
     }
 
     // paginated tasks
     @Override
-    public Page<Task> listTasks(int page, int size, String sort) {
-        return repo.findAllByIsDeletedFalse(PaginationUtils.buildPageable(page, size, sort));
+    public Page<Task> listTasks(UUID userId, int page, int size, String sort) {
+        return repo.findByUserIdAndIsDeletedFalse(userId, PaginationUtils.buildPageable(page, size, sort));
     }
 
     @Override
-    public List<Task> listAllTasks() {
-        return repo.findAll();
+    public List<Task> listAllTasks(UUID userId) {
+        return repo.findByUserId(userId);
     }
 
 //    @Override
@@ -104,9 +107,9 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public List<TaskDetailInfo> listAllTaskDetails() {
+    public List<TaskDetailInfo> listAllTaskDetails(UUID userId) {
         try{
-            return repo.findByIsDeletedFalse().stream()
+            return repo.findByUserIdAndIsDeletedFalse(userId).stream()
                     .map(this::toTaskDetail)
                     .toList();
         } catch (Exception e) {
@@ -116,17 +119,21 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task getTaskById(UUID id) {
-        return repo.findById(id)
+    public Task getTaskById(UUID id, UUID userId) {
+        return repo.findByIdAndUserIdAndIsDeletedFalse(id, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
     }
 
     @Override
     @Transactional
-    public Task createTask(String title, String taskDesc) {
+    public Task createTask(String title, String taskDesc, UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        
         Task t = Task.builder()
                 .title(title)
                 .description(taskDesc)
+                .user(user)
                 .createdAt(Instant.now())
                 .isCompleted(false)
                 .isDeleted(false)
@@ -136,8 +143,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public Task updateTask(UUID id, String title, String taskDesc, Boolean completed) {
-        Task t = getTaskById(id);
+    public Task updateTask(UUID id, String title, String taskDesc, Boolean completed, UUID userId) {
+        Task t = getTaskById(id, userId);
         if (title != null) t.setTitle(title);
         if (taskDesc != null) t.setDescription(taskDesc);
         if (completed != null) t.setCompleted(completed);
@@ -146,8 +153,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    public void deleteTask(UUID id) {
-        Task t = repo.findById(id)
+    public void deleteTask(UUID id, UUID userId) {
+        Task t = repo.findByIdAndUserIdAndIsDeletedFalse(id, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
         if (!t.isDeleted()) {
             t.setDeleted(true);
@@ -155,17 +162,18 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
+
     @Override
     @Transactional
-    public Task setCompleted(UUID id, Boolean completed) {
-        Task t = getTaskById(id);
+    public Task setCompleted(UUID id, Boolean completed, UUID userId) {
+        Task t = getTaskById(id, userId);
         t.setCompleted(completed);
         return repo.save(t);
     }
 
     @Override
     @Transactional
-    public Task insertMock() {
-        return createTask("Mock Task", "Generated by /tasks/mock");
+    public Task insertMock(UUID userId) {
+        return createTask("Mock Task", "Generated by /tasks/mock", userId);
     }
 }
