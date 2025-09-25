@@ -1,0 +1,331 @@
+{
+  "v": 10,
+  "id": "cmfx09fm81ekiil1kq4eukmx4",
+  "name": "todo",
+  "folders": [
+    {
+      "v": 10,
+      "id": "cmfzjpg1f22u0if1lggqbn9z0",
+      "name": "Task",
+      "folders": [],
+      "requests": [
+        {
+          "v": "15",
+          "name": "create-task",
+          "method": "POST",
+          "endpoint": "http://localhost:8080/api/tasks",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"title\": \"A Deleted Task\",\n  \"description\": \"This is a test task created via Hoppscotch\"\n}"
+          },
+          "requestVariables": [],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "list-task-page",
+          "method": "GET",
+          "endpoint": "http://localhost:8080/api/tasks",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "list-all-tasks",
+          "method": "GET",
+          "endpoint": "http://localhost:8080/api/tasks/listalltasks",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {}
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "_ref_id": "coll_mfzlvs1l_e5bf924d-faf6-4b2a-8f0f-adabfdb4d7b5"
+    },
+    {
+      "v": 10,
+      "id": "cmfzjpupo22u2if1l2otcwxb2",
+      "name": "Attachment",
+      "folders": [],
+      "requests": [
+        {
+          "v": "15",
+          "name": "upload-unlinked-attachment",
+          "method": "POST",
+          "endpoint": "http://localhost:8080/api/attachments",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "file",
+                "active": true,
+                "isFile": false,
+                "value": ""
+              }
+            ],
+            "showIndividualContentType": false
+          },
+          "requestVariables": [],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "upload-linked-attachment",
+          "method": "POST",
+          "endpoint": "http://localhost:8080/api/attachments/task/<<cat-task-id>>",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "multipart/form-data",
+            "body": [
+              {
+                "key": "file",
+                "active": true,
+                "isFile": false,
+                "value": ""
+              }
+            ]
+          },
+          "requestVariables": [
+            {
+              "key": "X-User-Id",
+              "value": "26496d5a-d212-4788-9415-780b91454aa0",
+              "active": true
+            }
+          ],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "list-attachments-for-task",
+          "method": "GET",
+          "endpoint": "http://localhost:8080/api/attachments/task/<<cat-task-id>>",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "attach-existing-to-task",
+          "method": "POST",
+          "endpoint": "http://localhost:8080/api/attachments/<<cat-attachment-2-id>>/attach/<<cat-task-id>>",
+          "params": [],
+          "headers": [
+            {
+              "key": "X-User-Id",
+              "value": "<<john-doe-user-id>>",
+              "active": true,
+              "description": ""
+            }
+          ],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {}
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "_ref_id": "coll_mfzlvs1l_e7f69a05-f544-42d2-b476-2fcdec89ef4b"
+    },
+    {
+      "v": 10,
+      "id": "cmfzjq8xt22u4if1lx5b1njw4",
+      "name": "User",
+      "folders": [],
+      "requests": [
+        {
+          "v": "15",
+          "name": "create-user",
+          "method": "POST",
+          "endpoint": "http://localhost:8080/api/users",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"username\": \"testuser\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\"\n}"
+          },
+          "requestVariables": [],
+          "responses": {}
+        },
+        {
+          "v": "15",
+          "name": "get-user",
+          "method": "GET",
+          "endpoint": "http://localhost:8080/api/users/id/<<john-doe-user-id>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "requestVariables": [],
+          "responses": {}
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": [],
+      "variables": [],
+      "_ref_id": "coll_mfzlvs1l_e8cac81d-b090-4ff5-ae6f-b18baf0f22db"
+    }
+  ],
+  "requests": [
+    {
+      "v": "15",
+      "name": "hello-world",
+      "method": "GET",
+      "endpoint": "http://localhost:8080/api/hello",
+      "params": [],
+      "headers": [],
+      "preRequestScript": "",
+      "testScript": "",
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "body": {
+        "contentType": null,
+        "body": null
+      },
+      "requestVariables": [],
+      "responses": {}
+    }
+  ],
+  "auth": {
+    "authType": "inherit",
+    "authActive": true
+  },
+  "headers": [],
+  "variables": [],
+  "_ref_id": "coll_mfzlvs1l_d15f7410-2938-47e1-bf3b-f55383bc7b70"
+}
