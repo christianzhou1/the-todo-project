@@ -1,0 +1,17 @@
+generatorName: typescript-axios
+inputSpec: http://localhost:8080/api/api-docs
+outputDir: src/generated/api
+additionalProperties:
+  typescriptThreePlus: true
+  supportsES6: true
+  withInterfaces: true
+  npmName: @todo/api-client
+  npmVersion: 1.0.0
+  modelPropertyNaming: camelCase
+  enumPropertyNaming: UPPERCASE
+  stringEnums: true
+  sortParamsByRequiredFlag: true
+  sortModelPropertiesByRequiredFlag: true
+  ensureUniqueParams: true
+  allowUnicodeIdentifiers: true
+  prependFormOrBodyParameters: true

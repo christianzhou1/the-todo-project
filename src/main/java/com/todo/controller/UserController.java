@@ -8,6 +8,11 @@ import com.todo.service.TaskService;
 import com.todo.service.UserService;
 import com.todo.web.dto.CreateUserRequest;
 import com.todo.web.dto.UpdateUserRequest;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +28,20 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
+@Tag(name = "User Management", description = "APIs for managing users")
 public class UserController {
 
     private final UserService userService;
     private final TaskService taskService;
 
     @GetMapping("/get-all-users")
+    @Operation(
+        summary = "Get all users",
+        description = "Retrieve a list of all users in the system"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Users retrieved successfully")
+    })
     public ResponseEntity<List<UserSummary>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         List<UserSummary> userSummaries = users.stream()
@@ -38,18 +51,45 @@ public class UserController {
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<UserInfo> getUserById(@PathVariable UUID id) {
+    @Operation(
+        summary = "Get user by ID",
+        description = "Retrieve user information by user ID"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<UserInfo> getUserById(
+            @Parameter(description = "User ID") @PathVariable UUID id) {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(com.todo.api.mapper.UserMapper.toUserInfo(user));
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<UserInfo> getUserByUsername(@PathVariable String username) {
+    @Operation(
+        summary = "Get user by username",
+        description = "Retrieve user information by username"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<UserInfo> getUserByUsername(
+            @Parameter(description = "Username") @PathVariable String username) {
         User user = userService.getUserByUsername(username);
         return ResponseEntity.ok(com.todo.api.mapper.UserMapper.toUserInfo(user));
     }
 
     @PostMapping
+    @Operation(
+        summary = "Create new user",
+        description = "Create a new user account"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "User created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid user data"),
+        @ApiResponse(responseCode = "409", description = "Username or email already exists")
+    })
     public ResponseEntity<UserInfo> createUser(@Validated @RequestBody CreateUserRequest request) {
         User saved = userService.createUser(
                 request.getUsername(),
@@ -68,7 +108,18 @@ public class UserController {
     }
 
     @PutMapping("/id/{id}")
-    public ResponseEntity<UserInfo> updateUser(@PathVariable UUID id, @Validated @RequestBody UpdateUserRequest request) {
+    @Operation(
+        summary = "Update user",
+        description = "Update user information"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User updated successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found"),
+        @ApiResponse(responseCode = "400", description = "Invalid user data")
+    })
+    public ResponseEntity<UserInfo> updateUser(
+            @Parameter(description = "User ID") @PathVariable UUID id, 
+            @Validated @RequestBody UpdateUserRequest request) {
         User updated = userService.updateUser(
                 id,
                 request.getUsername(),
@@ -80,19 +131,46 @@ public class UserController {
     }
 
     @PatchMapping("/id/{id}/deactivate")
-    public ResponseEntity<Void> deactivateUser(@PathVariable UUID id) {
+    @Operation(
+        summary = "Deactivate user",
+        description = "Deactivate a user account"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "User deactivated successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Void> deactivateUser(
+            @Parameter(description = "User ID") @PathVariable UUID id) {
         userService.deactivateUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/id/{id}/activate")
-    public ResponseEntity<Void> activateUser(@PathVariable UUID id) {
+    @Operation(
+        summary = "Activate user",
+        description = "Activate a user account"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "User activated successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Void> activateUser(
+            @Parameter(description = "User ID") @PathVariable UUID id) {
         userService.activateUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/id/{id}/tasks")
-    public ResponseEntity<List<TaskSummary>> getUserTasks(@PathVariable UUID id) {
+    @Operation(
+        summary = "Get user tasks",
+        description = "Retrieve all tasks for a specific user"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User tasks retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<List<TaskSummary>> getUserTasks(
+            @Parameter(description = "User ID") @PathVariable UUID id) {
         userService.getUserById(id); // Validate user exists
         List<com.todo.entity.Task> tasks = taskService.listTasks(id);
         List<TaskSummary> taskSummaries = tasks.stream()
