@@ -9,7 +9,6 @@ public final class AttachmentMapper {
     public static AttachmentInfo toInfo(Attachment a) {
         return AttachmentInfo.builder()
                 .id(a.getId())
-                .taskId(a.getTask() != null ? a.getTask().getId() : null)
                 .fileName(a.getFilename())
                 .contentType(a.getContentType())
                 .sizeBytes(a.getSizeBytes())

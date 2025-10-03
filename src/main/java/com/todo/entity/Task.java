@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -42,4 +44,8 @@ public class Task {
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<TaskAttachment> taskAttachments = new ArrayList<>();
 }

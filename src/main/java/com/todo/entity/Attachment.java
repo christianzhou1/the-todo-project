@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -20,10 +22,6 @@ public class Attachment {
 
     @JoinColumn(name = "user_id", nullable = false)
     private UUID userId;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name="task_id")
-    private Task task; // nullable, can be unlinked
 
     @Column(nullable = false, length = 255)
     private String filename; // original client filename
@@ -56,4 +54,8 @@ public class Attachment {
     void preUpdate() {
         updatedAt = Instant.now();
     }
+
+    @OneToMany(mappedBy = "attachment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<TaskAttachment> taskAttachments = new ArrayList<>();
 }

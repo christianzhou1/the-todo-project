@@ -34,4 +34,9 @@ public interface TaskService {
 
     List<TaskDetailInfo> listAllTaskDetails(UUID userId);
     // Page<TaskDetailInfo> listAllTaskDetails(int page, int size, String sort);
+
+    // Many-to-many relationship methods
+    void linkAttachmentToTask(UUID taskId, UUID attachmentId, UUID userId);
+    void unlinkAttachmentFromTask(UUID taskId, UUID attachmentId, UUID userId);
+    void unlinkAllAttachmentsFromTask(UUID taskId, UUID userId);
 }

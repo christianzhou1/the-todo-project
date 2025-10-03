@@ -10,7 +10,6 @@ import java.util.UUID;
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class AttachmentInfo {
     private UUID id;
-    private UUID taskId; // nullable
     private String fileName;
     private String contentType;
     private long sizeBytes;

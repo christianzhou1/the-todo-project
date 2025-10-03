@@ -4,18 +4,18 @@ import com.todo.api.dto.AttachmentInfo;
 import com.todo.api.mapper.AttachmentMapper;
 import com.todo.entity.Attachment;
 import com.todo.entity.Task;
+import com.todo.entity.TaskAttachment;
 import com.todo.entity.User;
 import com.todo.repository.AttachmentRepository;
+import com.todo.repository.TaskAttachmentRepository;
 import com.todo.repository.TaskRepository;
 import com.todo.repository.UserRepository;
 import com.todo.service.AttachmentService;
-import com.todo.service.TaskService;
 import com.todo.storage.BlobStorage;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.service.spi.ServiceException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +34,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
     private final AttachmentRepository attachmentRepo;
     private final TaskRepository taskRepo;
+    private final TaskAttachmentRepository taskAttachmentRepo;
     private final UserRepository userRepository;
     private final BlobStorage blobStorage;
 
@@ -79,7 +80,6 @@ public class AttachmentServiceImpl implements AttachmentService {
 
             Attachment a = Attachment.builder()
                     .userId(userId)
-                    .task(task)
                     .filename(file.getOriginalFilename() != null ? file.getOriginalFilename() : "file")
                     .contentType(stored.getContentType())
                     .sizeBytes(stored.getSize())
@@ -89,6 +89,14 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .updatedAt(Instant.now())
                     .build();
             a = attachmentRepo.save(a);
+            
+            // Create many-to-many relationship
+            TaskAttachment taskAttachment = TaskAttachment.builder()
+                    .task(task)
+                    .attachment(a)
+                    .build();
+            taskAttachmentRepo.save(taskAttachment);
+            
             return AttachmentMapper.toInfo(a);
         } catch (ResponseStatusException e) {
             throw e;
@@ -102,7 +110,9 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Override
     @Transactional(Transactional.TxType.SUPPORTS)
     public List<AttachmentInfo> listByTask(UUID taskId, UUID userId) {
-        return attachmentRepo.findByUserIdAndTask_Id(userId, taskId).stream()
+        return taskAttachmentRepo.findByTaskId(taskId).stream()
+                .map(TaskAttachment::getAttachment)
+                .filter(attachment -> attachment.getUserId().equals(userId))
                 .map(AttachmentMapper::toInfo)
                 .toList();
     }
@@ -125,7 +135,19 @@ public class AttachmentServiceImpl implements AttachmentService {
             Task t = taskRepo.findByIdAndUserAndIsDeletedFalse(taskId, user)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
 
-            a.setTask(t);
+            // Check if relationship already exists
+            TaskAttachment existing = taskAttachmentRepo.findByTaskIdAndAttachmentId(taskId, attachmentId);
+            if (existing != null) {
+                return AttachmentMapper.toInfo(a); // Already linked
+            }
+            
+            // Create many-to-many relationship
+            TaskAttachment taskAttachment = TaskAttachment.builder()
+                    .task(t)
+                    .attachment(a)
+                    .build();
+            taskAttachmentRepo.save(taskAttachment);
+            
             return AttachmentMapper.toInfo(a);
         } catch (ResponseStatusException e) {
             throw e;
@@ -146,7 +168,10 @@ public class AttachmentServiceImpl implements AttachmentService {
             if (!a.getUserId().equals(userId)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
             }
-            a.setTask(null);
+            
+            // Remove all task relationships for this attachment
+            taskAttachmentRepo.deleteByAttachmentId(attachmentId);
+            
             return AttachmentMapper.toInfo(a);
         } catch (ResponseStatusException e) {
             throw e;
@@ -168,6 +193,9 @@ public class AttachmentServiceImpl implements AttachmentService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
             }
 
+            // Remove all task relationships first
+            taskAttachmentRepo.deleteByAttachmentId(attachmentId);
+            
             try {
                 blobStorage.delete(a.getStoragePath());
             } catch (IOException io) {
