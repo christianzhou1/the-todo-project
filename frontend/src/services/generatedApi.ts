@@ -8,6 +8,7 @@ import {
   type LoginRequest,
 } from "../generated/api";
 import { envConfig } from "../config/env";
+import axios from "axios";
 
 // Create configuration with authentication
 const configuration = new Configuration({
@@ -16,15 +17,21 @@ const configuration = new Configuration({
     // Get JWT token from localStorage
     return localStorage.getItem("authToken") || "";
   },
-  // Add custom headers for X-User-Id
-  baseOptions: {
-    headers: {
-      get "X-User-Id"() {
-        return localStorage.getItem("userId") || "";
-      },
-    },
-  },
 });
+
+// Add request interceptor to conditionally add X-User-Id header
+axios.interceptors.request.use(
+  (config) => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      config.headers["X-User-Id"] = userId;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Create API instances
 export const authApi = new AuthenticationApi(configuration);

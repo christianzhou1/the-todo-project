@@ -32,13 +32,21 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder()
+        long currentTime = System.currentTimeMillis();
+        System.out.println("JWT Generation - Current time: " + currentTime);
+        System.out.println("JWT Generation - Subject: " + subject);
+        System.out.println("JWT Generation - Claims: " + claims);
+        
+        String token = Jwts.builder()
                 .claims(claims)
                 .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .issuedAt(new Date(currentTime))
+                .expiration(new Date(currentTime + expiration))
                 .signWith(getSigningKey())
                 .compact();
+                
+        System.out.println("JWT Generation - Generated token: " + token.substring(0, Math.min(50, token.length())) + "...");
+        return token;
     }
 
     public String extractUsername(String token) {

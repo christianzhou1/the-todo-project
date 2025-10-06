@@ -1,8 +1,30 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { authService } from "./services";
 import LoginForm from "./components/LoginForm";
 import TaskList from "./components/TaskList";
 import "./App.css";
+import {
+  AppBar,
+  Box,
+  Button,
+  CircularProgress, Container,
+  createTheme,
+  CssBaseline,
+  ThemeProvider, Toolbar,
+  Typography
+} from "@mui/material";
+
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2'
+    },
+    secondary: {
+      main: '#dc004e'
+    }
+  }
+})
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,34 +52,45 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="text-center py-8 text-lg text-gray-600">Loading...</div>
-      </div>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" bgcolor="grey.50">
+          <CircularProgress />
+        </Box>
+      </ThemeProvider>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-slate-800 text-white px-8 py-4 flex justify-between items-center shadow-md">
-        <h1 className="m-0 text-2xl">Todo App</h1>
-        {isAuthenticated && (
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-red-700"
-          >
-            Logout
-          </button>
-        )}
-      </header>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'grey.50' }}>
+        <AppBar position="static" sx={{ backgroundColor: 'grey.800' }}>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Todo App
+            </Typography>
+            {isAuthenticated && (
+              <Button
+                color="inherit"
+                onClick={handleLogout}
+                sx={{ backgroundColor: 'error.main', '&:hover': { backgroundColor: 'error.dark' } }}
+              >
+                Logout
+              </Button>
+            )}
+          </Toolbar>
+        </AppBar>
 
-      <main className="max-w-4xl mx-auto my-8 px-4">
-        {!isAuthenticated ? (
-          <LoginForm onLoginSuccess={handleLoginSuccess} />
-        ) : (
-          <TaskList />
-        )}
-      </main>
-    </div>
+        <Container maxWidth="lg" sx={{ my: 4 }}>
+          {!isAuthenticated ? (
+            <LoginForm onLoginSuccess={handleLoginSuccess} />
+          ) : (
+            <TaskList />
+          )}
+        </Container>
+      </Box>
+    </ThemeProvider>
   );
 }
 

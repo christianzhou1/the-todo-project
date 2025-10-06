@@ -10,6 +10,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TaskRepository extends JpaRepository<Task, UUID> {
+
+    // general queries
     List<Task> findAllByIsDeletedFalseOrderByCreatedAtDesc();
     Optional<Task> findByIdAndIsDeletedFalse(UUID id);
     Page<Task> findAllByIsDeletedFalse(org.springframework.data.domain.Pageable pageable);
@@ -28,4 +30,6 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     Page<Task> findByUserAndIsDeletedFalse(User user, org.springframework.data.domain.Pageable pageable);
     List<Task> findByUserAndIsDeletedFalse(User user);
     List<Task> findByUser(User user);
+
+
 }

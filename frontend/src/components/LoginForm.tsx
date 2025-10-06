@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { authService } from "../services";
+import {Alert, Box, Button, Paper, TextField, Typography} from "@mui/material";
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
@@ -45,62 +46,61 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
-      <h2 className="text-center mb-6 text-slate-800">Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label
-            htmlFor="usernameOrEmail"
-            className="block mb-2 font-medium text-gray-700"
-          >
-            Username or Email:
-          </label>
-          <input
-            type="text"
-            id="usernameOrEmail"
-            name="usernameOrEmail"
-            value={formData.usernameOrEmail}
-            onChange={handleInputChange}
-            required
-            disabled={loading}
-            className="w-full p-3 border border-gray-300 rounded text-base box-border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
+    <Paper
+      elevation={3}
+      sx={{
+        p: 4,
+        maxWidth: 400,
+        mx: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2
+      }}
+    >
+      <Typography variant="h4" component="h2" textAlign="center" gutterBottom>Login</Typography>
+      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
 
-        <div className="mb-4">
-          <label
-            htmlFor="password"
-            className="block mb-2 font-medium text-gray-700"
-          >
-            Password:
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            required
-            disabled={loading}
-            className="w-full p-3 border border-gray-300 rounded text-base box-border focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
+        <TextField
+          label="usernameOrEmail"
+          name="usernameOrEmail"
+          value={formData.usernameOrEmail}
+          onChange={handleInputChange}
+          required
+          disabled={loading}
+          fullWidth
+          variant="outlined"
+        />
+
+        <TextField
+          label="password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleInputChange}
+          required
+          disabled={loading}
+          fullWidth
+          variant="outlined"
+        />
+
 
         {error && (
-          <div className="bg-red-600 text-white p-3 rounded mt-4 text-center">
+          <Alert severity="error">
             {error}
-          </div>
+          </Alert>
         )}
 
-        <button
+        <Button
           type="submit"
+          variant="contained"
           disabled={loading}
-          className="w-full bg-blue-600 text-white border-0 p-3 rounded text-base cursor-pointer mt-4 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          fullWidth
+          sx={{ mt: 2 }}
         >
           {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-    </div>
+        </Button>
+      </Box>
+    </Paper>
   );
 };
 

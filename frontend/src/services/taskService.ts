@@ -63,7 +63,7 @@ class TaskService {
       return {
         code: 200,
         msg: "Success",
-        data: response.data
+        data: response.data,
       };
     } catch (error: any) {
       console.error("List tasks error:", error);
@@ -71,7 +71,7 @@ class TaskService {
       return {
         code: error.response?.status || 500,
         msg: error.response?.data?.msg || "Failed to list tasks.",
-      }
+      };
     }
   }
 

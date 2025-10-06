@@ -1,5 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { taskService, authService } from "../services";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import {
+  AddTask,
+  CheckCircle,
+  Delete,
+  RadioButtonUnchecked,
+  Refresh,
+} from "@mui/icons-material";
 
 interface Task {
   id: string;
@@ -140,139 +166,195 @@ const TaskList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-8 text-lg text-gray-600">
-        Loading tasks...
-      </div>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="200px"
+      >
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-600 text-white p-4 rounded text-center">
-        <p>Error: {error}</p>
-        <button
-          onClick={fetchTasks}
-          className="bg-white text-red-600 border-0 px-4 py-2 rounded cursor-pointer mt-2"
-        >
-          Retry
-        </button>
-      </div>
+      <Alert
+        severity="error"
+        action={
+          <Button onClick={fetchTasks} color="inherit" size="small">
+            Retry
+          </Button>
+        }
+      >
+        Error: {error}
+      </Alert>
     );
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-lg">
-      <h2 className="mt-0 text-slate-800 flex justify-between items-center">
-        My Tasks
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="bg-green-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-green-700"
+    <Paper elevation={3} sx={{ p: 3 }}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
+        <Typography variant="h4" component="h2">
+          My Tasks
+        </Typography>
+        <Box display="flex" gap={1}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddTask />}
+            onClick={() => setShowCreateForm(true)}
           >
-            {showCreateForm ? "Cancel" : "Create Task"}
-          </button>
-
-          <button
+            Create Task
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
             onClick={fetchTasks}
-            className="bg-blue-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-blue-700"
           >
             Refresh
-          </button>
-        </div>
-      </h2>
-
-      {showCreateForm && (
-        <div className="flex-col gap-2">
-          <h2 className="mt-0 text-slate-800 flex justify-between items-center">
-            Create New Task
-          </h2>
-          <div className="flex-col gap-2 border border-gray-200 rounded p-4 mb-4 flex justify-between">
-            <input
-              type="text"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter task title"
-            />
-
-            <input
-              type="text"
-              value={newTaskDescription}
-              onChange={(e) => setNewTaskDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter task description (optional)"
-            />
-
-            <div className="flex gap-2">
-              <button
-                onClick={createTask}
-                disabled={isCreating || !newTaskTitle.trim()}
-                className="bg-green-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-green-700"
-              >
-                {isCreating ? "Creating..." : "Create Task"}
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setNewTaskTitle("");
-                  setNewTaskDescription("");
-                  setNewTaskDueDate("");
-                }}
-                className="bg-red-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-red-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </Button>
+        </Box>
+      </Box>
 
       {tasks.length === 0 ? (
-        <p className="text-gray-600">No tasks found. Create your first task!</p>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          textAlign="center"
+          py={4}
+        >
+          No tasks found. Create your first task!
+        </Typography>
       ) : (
-        <ul className="list-none p-0 my-4">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className={`border border-gray-200 rounded p-4 mb-4 flex justify-between items-start ${
-                task.completed ? "bg-gray-50 opacity-70" : ""
-              }`}
-            >
-              <div className="flex-1">
-                <h3 className="m-0 mb-2 text-slate-800">{task.title}</h3>
-                <p className="m-0 mb-2 text-gray-600">{task.description}</p>
-                <small className="text-gray-500 text-xs">
-                  Created: {new Date(task.createdAt).toLocaleDateString()} {new Date(task.createdAt).toLocaleTimeString()}
-                </small>
-
-                <small className="text-gray-500 text-xs">
-                  ; Updated: {new Date(task.updatedAt).toLocaleDateString()} {new Date(task.updatedAt).toLocaleTimeString()}
-                </small>
-              </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={() => toggleTaskCompletion(task.id, task.completed)}
-                  className={`text-white border-0 px-4 py-2 rounded cursor-pointer text-sm ${
-                    task.completed
-                      ? "bg-yellow-600 hover:bg-yellow-700"
-                      : "bg-green-600 hover:bg-green-700"
-                  }`}
-                >
-                  {task.completed ? "Mark Incomplete" : "Mark Complete"}
-                </button>
-                <button
-                  onClick={() => deleteTask(task.id)}
-                  className="bg-red-600 text-white border-0 px-4 py-2 rounded cursor-pointer text-sm hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
+        <List>
+          {tasks.map((task, index) => (
+            <React.Fragment key={task.id}>
+              <ListItem
+                sx={{
+                  bgcolor: task.completed ? "action.hover" : "background.paper",
+                  opacity: task.completed ? 0.7 : 1,
+                  borderRadius: 1,
+                  mb: 1,
+                }}
+                secondaryAction={
+                  <Box display="flex" gap={1}>
+                    <IconButton
+                      onClick={() =>
+                        toggleTaskCompletion(task.id, task.completed)
+                      }
+                      color={task.completed ? "warning" : "success"}
+                    >
+                      {task.completed ? (
+                        <RadioButtonUnchecked />
+                      ) : (
+                        <CheckCircle />
+                      )}
+                    </IconButton>
+                    <IconButton
+                      onClick={() => deleteTask(task.id)}
+                      color="error"
+                    >
+                      <Delete />
+                    </IconButton>
+                  </Box>
+                }
+              >
+                <ListItemText
+                  primary={
+                    <Typography
+                      variant="h6"
+                      component="span"
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                    >
+                      {task.title}
+                      {task.completed && (
+                        <Chip label="Completed" color="success" size="small" />
+                      )}
+                    </Typography>
+                  }
+                  secondary={
+                    <>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        component="span"
+                        sx={{ mb: 1 }}
+                      >
+                        {task.description}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        component="span"
+                      >
+                        Created: {new Date(task.createdAt).toLocaleDateString()}{" "}
+                        {new Date(task.createdAt).toLocaleTimeString()}
+                        {" • "}
+                        Updated: {new Date(
+                          task.updatedAt
+                        ).toLocaleDateString()}{" "}
+                        {new Date(task.updatedAt).toLocaleTimeString()}
+                      </Typography>
+                    </>
+                  }
+                />
+              </ListItem>
+              {index < tasks.length - 1 && <Divider />}
+            </React.Fragment>
           ))}
-        </ul>
+        </List>
       )}
-    </div>
+
+      {/* Create Task Dialog */}
+      <Dialog
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Create New Task</DialogTitle>
+        <DialogContent>
+          <Box display="flex" flexDirection="column" gap={2} pt={1}>
+            <TextField
+              label="Task Title"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              fullWidth
+              required
+              variant="outlined"
+            />
+            <TextField
+              label="Task Description (Optional)"
+              value={newTaskDescription}
+              onChange={(e) => setNewTaskDescription(e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              variant="outlined"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowCreateForm(false)}>Cancel</Button>
+          <Button
+            onClick={createTask}
+            variant="contained"
+            disabled={isCreating || !newTaskTitle.trim()}
+            startIcon={
+              isCreating ? <CircularProgress size={20} /> : <AddTask />
+            }
+          >
+            {isCreating ? "Creating..." : "Create Task"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Paper>
   );
 };
 
