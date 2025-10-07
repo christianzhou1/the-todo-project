@@ -39,6 +39,9 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByParentTaskIsNullAndUserIdAndIsDeletedFalse(UUID userId);
     List<Task> findByParentTaskIsNullAndUserIdAndIsDeletedFalse(UUID userId);
 
+    @Query("SELECT DISTINCT t FROM Task t LEFT JOIN FETCH t.subtasks WHERE t.user.id = :userId AND t.isDeleted = false ORDER BY t.createdAt DESC")
+    List<Task> findByUserIdAndIsDeletedFalseOrderByCreatedAtDescWithSubtasks(@Param("userId") UUID userId);
+
     // Recursive query to get all subtasks up to a certain depth
     @Query(value = """
         WITH RECURSIVE task_hierarchy AS (
@@ -65,4 +68,5 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findSubtasksRecursively(@Param("parentTaskId") UUID parentTaskId,
                                        @Param("userId") UUID userId,
                                        @Param("maxDepth") int maxDepth);
+
 }

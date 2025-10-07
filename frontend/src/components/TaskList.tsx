@@ -25,6 +25,7 @@ import {
   Delete,
   RadioButtonUnchecked,
   Refresh,
+  SubdirectoryArrowRight,
 } from "@mui/icons-material";
 
 interface Task {
@@ -34,6 +35,8 @@ interface Task {
   completed: boolean;
   createdAt: string;
   updatedAt: string;
+  parentTaskId?: string;
+  subtaskCount?: number;
 }
 
 const TaskList: React.FC = () => {
@@ -47,6 +50,7 @@ const TaskList: React.FC = () => {
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [parentTaskId, setParentTaskId] = useState<string | null>(null);
 
   const fetchTasks = async () => {
     setLoading(true);
@@ -120,7 +124,8 @@ const TaskList: React.FC = () => {
       const response = await taskService.createTask(
         newTaskTitle.trim(),
         newTaskDescription.trim(),
-        userId
+        userId,
+        parentTaskId || undefined
       );
 
       if (response.code === 200 && response.data) {
@@ -131,6 +136,7 @@ const TaskList: React.FC = () => {
         setNewTaskTitle("");
         setNewTaskDescription("");
         setNewTaskDueDate("");
+        setParentTaskId(null);
         setShowCreateForm(false);
       } else {
         setError(response.msg);
@@ -158,6 +164,24 @@ const TaskList: React.FC = () => {
     } catch (err) {
       setError("Failed to delete task");
     }
+  };
+
+  const openCreateSubtaskForm = (parentTaskId: string) => {
+    setParentTaskId(parentTaskId);
+    setShowCreateForm(true);
+  };
+
+  const openCreateTaskForm = () => {
+    setParentTaskId(null);
+    setShowCreateForm(true);
+  };
+
+  const closeCreateForm = () => {
+    setShowCreateForm(false);
+    setParentTaskId(null);
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setNewTaskDueDate("");
   };
 
   useEffect(() => {
@@ -208,7 +232,7 @@ const TaskList: React.FC = () => {
             variant="contained"
             color="primary"
             startIcon={<AddTask />}
-            onClick={() => setShowCreateForm(true)}
+            onClick={openCreateTaskForm}
           >
             Create Task
           </Button>
@@ -245,6 +269,13 @@ const TaskList: React.FC = () => {
                 secondaryAction={
                   <Box display="flex" gap={1}>
                     <IconButton
+                      onClick={() => openCreateSubtaskForm(task.id)}
+                      color="primary"
+                      title="Add Subtask"
+                    >
+                      <SubdirectoryArrowRight />
+                    </IconButton>
+                    <IconButton
                       onClick={() =>
                         toggleTaskCompletion(task.id, task.completed)
                       }
@@ -275,6 +306,15 @@ const TaskList: React.FC = () => {
                       {task.title}
                       {task.completed && (
                         <Chip label="Completed" color="success" size="small" />
+                      )}
+                      {} subtask count: {task.subtaskCount}
+                      {task.subtaskCount != null && task.subtaskCount > 0 && (
+                          <Chip
+                          label={`${task.subtaskCount} subtask${task.subtaskCount > 1 ? 's' : ''}`}
+                          color="info"
+                          size="small"
+                          variant="outlined"
+                        />
                       )}
                     </Typography>
                   }
@@ -314,11 +354,13 @@ const TaskList: React.FC = () => {
       {/* Create Task Dialog */}
       <Dialog
         open={showCreateForm}
-        onClose={() => setShowCreateForm(false)}
+        onClose={closeCreateForm}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Create New Task</DialogTitle>
+        <DialogTitle>
+          {parentTaskId ? "Create New Subtask" : "Create New Task"}
+        </DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} pt={1}>
             <TextField
@@ -341,7 +383,7 @@ const TaskList: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowCreateForm(false)}>Cancel</Button>
+          <Button onClick={closeCreateForm}>Cancel</Button>
           <Button
             onClick={createTask}
             variant="contained"
@@ -350,7 +392,11 @@ const TaskList: React.FC = () => {
               isCreating ? <CircularProgress size={20} /> : <AddTask />
             }
           >
-            {isCreating ? "Creating..." : "Create Task"}
+            {isCreating
+              ? "Creating..."
+              : parentTaskId
+              ? "Create Subtask"
+              : "Create Task"}
           </Button>
         </DialogActions>
       </Dialog>

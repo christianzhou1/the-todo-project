@@ -14,6 +14,8 @@ import com.todo.repository.TaskRepository;
 import com.todo.repository.UserRepository;
 import com.todo.service.TaskService;
 import com.todo.util.PaginationUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,9 @@ public class TaskServiceImpl implements TaskService {
     private final AttachmentRepository attachmentRepo;
     private final TaskAttachmentRepository taskAttachmentRepo;
     private final UserRepository userRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private TaskDetailInfo toTaskDetail(Task task) {
 
@@ -93,14 +98,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<Task> listTasks(UUID userId) {
-        return repo.findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(userId);
+        return repo.findByUserIdAndIsDeletedFalseOrderByCreatedAtDescWithSubtasks(userId);
     }
 
     // paginated tasks
-    @Override
-    public Page<Task> listTasks(UUID userId, int page, int size, String sort) {
-        return repo.findByUserIdAndIsDeletedFalse(userId, PaginationUtils.buildPageable(page, size, sort));
-    }
+    // @Override
+    // public Page<Task> listTasks(UUID userId, int page, int size, String sort) {
+    //     return repo.findByUserIdAndIsDeletedFalse(userId, PaginationUtils.buildPageable(page, size, sort));
+    // }
 
     @Override
     public List<Task> listAllTasks(UUID userId) {
@@ -145,16 +150,32 @@ public class TaskServiceImpl implements TaskService {
     public Task createTask(String title, String taskDesc, UUID userId, UUID parentTaskId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        
+
+        // fetch parent task if parentTaskId is provided; set parentTask field
+        Task parentTask = null;
+        if (parentTaskId != null) {
+            parentTask = repo.findByIdAndUserIdAndIsDeletedFalse(parentTaskId, userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent task not found"));
+        }
+
         Task t = Task.builder()
                 .title(title)
                 .description(taskDesc)
                 .user(user)
+                .parentTask(parentTask)
                 .createdAt(Instant.now())
                 .isCompleted(false)
                 .isDeleted(false)
                 .build();
-        return repo.save(t);
+
+        Task savedTask = repo.save(t);
+
+        // Refresh the parent task to update its subtasks collection
+        if (parentTask != null) {
+            entityManager.refresh(parentTask);
+        }
+        
+        return savedTask;
     }
 
     @Override

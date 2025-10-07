@@ -21,7 +21,7 @@ public interface TaskService {
     Task getTaskById(UUID id, UUID userId);
 
     List<Task> listTasks(UUID userId);
-    Page<Task> listTasks(UUID userId, int page, int size, String sort);
+    // Page<Task> listTasks(UUID userId, int page, int size, String sort);
 
     void deleteTask(UUID id, UUID userId);
 

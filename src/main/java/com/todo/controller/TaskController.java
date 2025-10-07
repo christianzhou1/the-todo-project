@@ -56,14 +56,15 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getTaskDetail(id, userId));
     }
 
+
     @GetMapping
     @Operation(
-        summary = "Get paginated list of tasks",
-        description = "Retrieve a paginated list of tasks with sorting options"
+            summary = "Get list of tasks",
+            description = "Retrieve a list of tasks with sorting options"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<TaskSummary>> listTasks(
             @RequestHeader("X-User-Id") UUID userId,
@@ -72,15 +73,14 @@ public class TaskController {
             @Parameter(description = "Sort criteria (e.g., 'createdAt,desc')") @RequestParam(defaultValue = "createdAt,desc") String sort
     ) {
         userService.getUserById(userId); // Validate user exists
-        // call the service to fetch Page<Task> according to parameters
-        Page<Task> result = taskService.listTasks(userId, page, size, sort);
+        // call the service to fetch List<Task>
+        List<Task> result = taskService.listTasks(userId);
 
-        List<TaskSummary> taskSummaries = result.getContent().stream()
+        List<TaskSummary> taskSummaries = result.stream()
                 .map(com.todo.api.mapper.TaskMapper::toTaskSummary)
                 .toList();
 
-        HttpHeaders headers = PaginationUtils.buildPaginatedHeaders(result, sort);
-        return ResponseEntity.ok().headers(headers).body(taskSummaries);
+        return ResponseEntity.ok().body(taskSummaries);
     }
 
     @GetMapping("/id/{id}")

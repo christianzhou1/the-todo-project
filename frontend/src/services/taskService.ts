@@ -81,10 +81,16 @@ class TaskService {
   async createTask(
     title: string,
     description: string,
-    userId: string
+    userId: string,
+    parentTaskId?: string
   ): Promise<ApiResponse<any>> {
     try {
-      const response = await taskApi.createTask(userId, { title, description });
+      const requestData: any = { title, description };
+      if (parentTaskId) {
+        requestData.parentTaskId = parentTaskId;
+      }
+
+      const response = await taskApi.createTask(userId, requestData);
       return {
         code: 200,
         msg: "Success",

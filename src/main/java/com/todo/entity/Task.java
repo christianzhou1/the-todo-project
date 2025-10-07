@@ -2,7 +2,9 @@ package com.todo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.annotations.Where;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -51,7 +53,8 @@ public class Task {
     private Task parentTask;
 
     // Store direct children mapped by parentTask
-    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @SQLRestriction("is_deleted = false")
     @Builder.Default
     private List<Task> subtasks = new ArrayList<>();
 
