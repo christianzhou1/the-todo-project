@@ -4,6 +4,8 @@ import com.todo.entity.Task;
 import com.todo.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,5 +33,36 @@ public interface TaskRepository extends JpaRepository<Task, UUID> {
     List<Task> findByUserAndIsDeletedFalse(User user);
     List<Task> findByUser(User user);
 
+    // Subtask-related queries
+    List<Task> findByParentTaskIdAndUserIdAndIsDeletedFalse(UUID parentTaskId, UUID userId);
+    List<Task> findByParentTaskIdAndUserIdAndIsDeletedFalseOrderByCreatedAtDesc(UUID parentTaskId, UUID userId);
+    List<Task> findByParentTaskIsNullAndUserIdAndIsDeletedFalse(UUID userId);
+    List<Task> findByParentTaskIsNullAndUserIdAndIsDeletedFalse(UUID userId);
 
+    // Recursive query to get all subtasks up to a certain depth
+    @Query(value = """
+        WITH RECURSIVE task_hierarchy AS (
+            -- Base case: direct children
+            SELECT t.*, 1 as depth
+            FROM task t
+            WHERE t.parent_task_id = :parentTaskId 
+              AND t.user_id = :userId 
+              AND t.is_deleted = false
+            
+            UNION ALL
+            
+            -- Recursive case: children of children
+            SELECT t.*, th.depth + 1
+            FROM task t
+            INNER JOIN task_hierarchy th ON t.parent_task_id = th.id
+            WHERE t.user_id = :userId 
+              AND t.is_deleted = false
+              AND th.depth < :maxDepth
+        )
+        SELECT * FROM task_hierarchy
+        ORDER BY depth, created_at DESC
+        """, nativeQuery = true)
+    List<Task> findSubtasksRecursively(@Param("parentTaskId") UUID parentTaskId,
+                                       @Param("userId") UUID userId,
+                                       @Param("maxDepth") int maxDepth);
 }

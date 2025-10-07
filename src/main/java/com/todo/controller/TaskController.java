@@ -2,6 +2,7 @@ package com.todo.controller;
 
 import com.todo.api.dto.TaskDetailInfo;
 import com.todo.api.dto.TaskSummary;
+import com.todo.api.mapper.TaskMapper;
 import com.todo.entity.Task;
 import com.todo.service.TaskService;
 import com.todo.service.UserService;
@@ -103,7 +104,7 @@ public class TaskController {
     @PostMapping
     @Operation(
         summary = "Create new task",
-        description = "Create a new todo task"
+        description = "Create a new todo task or subtask"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Task created successfully"),
@@ -114,7 +115,7 @@ public class TaskController {
             @Validated @RequestBody CreateTaskRequest req, 
             @RequestHeader("X-User-Id") UUID userId) {
         userService.getUserById(userId); // Validate user exists
-        Task saved = taskService.createTask(req.getTitle(), req.getDescription(), userId);
+        Task saved = taskService.createTask(req.getTitle(), req.getDescription(), userId, req.getParentTaskId());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/id/{id}")
@@ -227,5 +228,84 @@ public class TaskController {
     public ResponseEntity<List<TaskDetailInfo>> listAllTaskDetails(@RequestHeader("X-User-Id") UUID userId) {
         userService.getUserById(userId); // Validate user exists
         return ResponseEntity.ok(taskService.listAllTaskDetails(userId));
+    }
+
+
+
+    // Subtask endpoints
+    @GetMapping("/id/{id}/subtasks")
+    @Operation(
+            summary = "Get direct subtasks of a task",
+            description = "Retrieve all direct subtasks of a specific task"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subtasks retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Parent task not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public List<TaskSummary> getSubtasks(
+            @Parameter(description = "Parent task ID") @PathVariable UUID id,
+            @RequestHeader("X-User-Id") UUID userId) {
+        userService.getUserById(userId);
+        List<Task> subtasks = taskService.getSubtasks(id, userId);
+        return subtasks.stream()
+                .map(TaskMapper::toTaskSummary)
+                .toList();
+    }
+
+    @GetMapping("/id/{id}/subtasks/recursive")
+    @Operation(
+            summary = "Get all subtasks recursively",
+            description = "Retrieve all subtasks of a task up to a specified depth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Subtasks retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Parent task not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public List<TaskSummary> getSubtasksRecursively(
+            @Parameter(description = "Parent task ID") @PathVariable UUID id,
+            @Parameter(description = "Maximum depth to traverse") @RequestParam(defaultValue = "3") int maxDepth,
+            @RequestHeader("X-User-Id") UUID userId) {
+        userService.getUserById(userId); // Validate user exists
+        List<Task> subtasks = taskService.getSubtasksRecursively(id, userId, maxDepth);
+        return subtasks.stream()
+                .map(com.todo.api.mapper.TaskMapper::toTaskSummary)
+                .toList();
+    }
+
+    @GetMapping("/id/{id}/with-subtasks")
+    @Operation(
+            summary = "Get task with subtasks",
+            description = "Retrieve a task with its subtasks organized in a hierarchical structure"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Task with subtasks retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Task not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public TaskSummary getTaskWithSubtasks(
+            @Parameter(description = "Task ID") @PathVariable UUID id,
+            @Parameter(description = "Maximum depth to traverse") @RequestParam(defaultValue = "3") int maxDepth,
+            @RequestHeader("X-User-Id") UUID userId) {
+        userService.getUserById(userId); // Validate user exists
+        return taskService.getTaskWithSubtasks(id, userId, maxDepth);
+    }
+
+    @GetMapping("/root")
+    @Operation(
+            summary = "Get root tasks",
+            description = "Retrieve all root tasks (tasks without parent tasks)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Root tasks retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public List<TaskSummary> getRootTasks(@RequestHeader("X-User-Id") UUID userId) {
+        userService.getUserById(userId); // Validate user exists
+        List<Task> rootTasks = taskService.getRootTasks(userId);
+        return rootTasks.stream()
+                .map(com.todo.api.mapper.TaskMapper::toTaskSummary)
+                .toList();
     }
 }

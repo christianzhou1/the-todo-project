@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 public class CreateTaskRequest {
@@ -18,4 +19,7 @@ public class CreateTaskRequest {
 
     @FutureOrPresent(message = "dueDate cannot be in the past")
     private Instant dueDate;
+
+    // Optional parent task ID for creating subtasks
+    private UUID parentTaskId;
 }

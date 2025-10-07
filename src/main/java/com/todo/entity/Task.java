@@ -45,6 +45,16 @@ public class Task {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
 
+    // Parent-child relationship for subtasks
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_task_id", nullable = true)
+    private Task parentTask;
+
+    // Store direct children mapped by parentTask
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Task> subtasks = new ArrayList<>();
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<TaskAttachment> taskAttachments = new ArrayList<>();

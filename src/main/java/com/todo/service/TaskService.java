@@ -1,6 +1,7 @@
 package com.todo.service;
 
 import com.todo.api.dto.TaskDetailInfo;
+import com.todo.api.dto.TaskSummary;
 import com.todo.entity.Task;
 import com.todo.entity.User;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ public interface TaskService {
     // CRUD operations
 
     Task createTask(String title, String description, UUID userId);
+    Task createTask(String title, String description, UUID userId, UUID parentTaskId);
 
     Task getTaskById(UUID id, UUID userId);
 
@@ -30,10 +32,16 @@ public interface TaskService {
     Task insertMock(UUID userId);
 
     List<Task> listAllTasks(UUID userId);
-//    Page<Task> listAllTasks(int page, int size, String sort);
+    // Page<Task> listAllTasks(int page, int size, String sort);
 
     List<TaskDetailInfo> listAllTaskDetails(UUID userId);
     // Page<TaskDetailInfo> listAllTaskDetails(int page, int size, String sort);
+
+    // Subtask operations
+    List<Task> getSubtasks(UUID parentTaskId, UUID userId);
+    List<Task> getSubtasksRecursively(UUID parentTaskId, UUID userId, int maxDepth);
+    List<Task> getRootTasks(UUID userId);
+    TaskSummary getTaskWithSubtasks(UUID taskId, UUID userId, int maxDepth);
 
     // Many-to-many relationship methods
     void linkAttachmentToTask(UUID taskId, UUID attachmentId, UUID userId);
