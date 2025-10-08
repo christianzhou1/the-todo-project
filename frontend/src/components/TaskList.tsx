@@ -4,30 +4,18 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
   Paper,
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  AddTask,
-  CheckCircle,
-  Delete,
-  RadioButtonUnchecked,
-  Refresh,
-  SubdirectoryArrowRight,
-} from "@mui/icons-material";
+import { AddTask, Refresh } from "@mui/icons-material";
 import { Tree } from "react-arborist";
+import TaskItem from "./TaskItem";
 
 interface Task {
   id: string;
@@ -75,7 +63,7 @@ const buildTreeData = (flatTasks: Task[]): TreeNode[] => {
       if (parent && node) {
         parent.children!.push(node);
       }
-    } else if (parent && node) {
+    } else if (node) {
       // if task doesn't have parent: push task into the root node
       rootNodes.push(node);
     }
@@ -326,110 +314,27 @@ const TaskList: React.FC = () => {
           No tasks found. Create your first task!
         </Typography>
       ) : (
-        <>
-          <Tree data={treeData}></Tree>
-          <List>
-            {tasks.map((task, index) => (
-              <React.Fragment key={task.id}>
-                <ListItem
-                  sx={{
-                    bgcolor: task.completed
-                      ? "action.hover"
-                      : "background.paper",
-                    opacity: task.completed ? 0.7 : 1,
-                    borderRadius: 1,
-                    mb: 1,
-                  }}
-                  secondaryAction={
-                    <Box display="flex" gap={1}>
-                      <IconButton
-                        onClick={() => openCreateSubtaskForm(task.id)}
-                        color="primary"
-                        title="Add Subtask"
-                      >
-                        <SubdirectoryArrowRight />
-                      </IconButton>
-                      <IconButton
-                        onClick={() =>
-                          toggleTaskCompletion(task.id, task.completed)
-                        }
-                        color={task.completed ? "warning" : "success"}
-                      >
-                        {task.completed ? (
-                          <RadioButtonUnchecked />
-                        ) : (
-                          <CheckCircle />
-                        )}
-                      </IconButton>
-                      <IconButton
-                        onClick={() => deleteTask(task.id)}
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  }
-                >
-                  <ListItemText
-                    primary={
-                      <Typography
-                        variant="h6"
-                        component="span"
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        {task.title}
-                        {task.completed && (
-                          <Chip
-                            label="Completed"
-                            color="success"
-                            size="small"
-                          />
-                        )}
-                        {} subtask count: {task.subtaskCount}
-                        {task.subtaskCount != null && task.subtaskCount > 0 && (
-                          <Chip
-                            label={`${task.subtaskCount} subtask${
-                              task.subtaskCount > 1 ? "s" : ""
-                            }`}
-                            color="info"
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Typography>
-                    }
-                    secondary={
-                      <>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          component="span"
-                          sx={{ mb: 1 }}
-                        >
-                          {task.description}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          component="span"
-                        >
-                          Created:{" "}
-                          {new Date(task.createdAt).toLocaleDateString()}{" "}
-                          {new Date(task.createdAt).toLocaleTimeString()}
-                          {" • "}
-                          Updated:{" "}
-                          {new Date(task.updatedAt).toLocaleDateString()}{" "}
-                          {new Date(task.updatedAt).toLocaleTimeString()}
-                        </Typography>
-                      </>
-                    }
-                  />
-                </ListItem>
-                {index < tasks.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </List>
-        </>
+        <Tree
+          data={treeData}
+          openByDefault={true}
+          width="100%"
+          height={700}
+          indent={48}
+          rowHeight={80}
+        >
+          {({ node, style, dragHandle }) => (
+            <div style={style} ref={dragHandle}>
+              <TaskItem
+                task={node.data.task}
+                index={0} // Tree handles positioning, so index is not critical
+                totalTasks={tasks.length}
+                onToggleCompletion={toggleTaskCompletion}
+                onDelete={deleteTask}
+                onCreateSubtask={openCreateSubtaskForm}
+              />
+            </div>
+          )}
+        </Tree>
       )}
 
       {/* Create Task Dialog */}
