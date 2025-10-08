@@ -247,6 +247,26 @@ class TaskService {
       };
     }
   }
+
+  /**
+   * Get root tasks
+   */
+  async getRootTasks(userId: string): Promise<ApiResponse<any>> {
+    try {
+      const response = await taskApi.getRootTasks(userId);
+      return {
+        code: 200,
+        msg: "Success",
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error("Get root tasks error:", error);
+      return {
+        code: error.response?.status || 500,
+        msg: error.response?.data?.msg || "Failed to get root tasks.",
+      };
+    }
+  }
 }
 
 export const taskService = new TaskService();
