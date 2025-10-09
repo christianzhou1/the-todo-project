@@ -25,6 +25,7 @@ interface Task {
   parentTaskId?: string;
   subtaskCount?: number;
   displayOrder?: number;
+  attachmentCount?: number;
 }
 
 interface TaskItemProps {
@@ -89,6 +90,16 @@ const TaskItem: React.FC<TaskItemProps> = ({
                 <Chip
                   label={`${task.subtaskCount} subtask${
                     task.subtaskCount > 1 ? "s" : ""
+                  }`}
+                  color="info"
+                  size="small"
+                  variant="outlined"
+                />
+              )}
+              {task.attachmentCount != null && task.attachmentCount > 0 && (
+                <Chip
+                  label={`${task.attachmentCount} attachment${
+                    task.attachmentCount > 1 ? "s" : ""
                   }`}
                   color="info"
                   size="small"

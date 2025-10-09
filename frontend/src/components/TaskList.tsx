@@ -108,6 +108,7 @@ interface Task {
   parentTaskId?: string;
   subtaskCount?: number;
   displayOrder?: number;
+  attachmentCount?: number;
 }
 
 interface TreeNode {

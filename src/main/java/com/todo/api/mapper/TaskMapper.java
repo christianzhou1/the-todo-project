@@ -35,6 +35,7 @@ public final class TaskMapper {
                 .isDeleted(t.isDeleted())
                 .parentTaskId(t.getParentTask() != null ? t.getParentTask().getId() : null)
                 .subtaskCount(t.getSubtasks() != null ? t.getSubtasks().size() : 0)
+                .attachmentCount(t.getTaskAttachments() != null ? t.getTaskAttachments().size() : 0)
                 .build();
     }
 

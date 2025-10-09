@@ -22,4 +22,5 @@ public class TaskSummary {
     private UUID parentTaskId;
     private List<TaskSummary> subtasks;
     private int subtaskCount;
+    private int attachmentCount;
 }
