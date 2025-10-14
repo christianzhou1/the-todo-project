@@ -14,89 +14,9 @@ import {
   Typography,
 } from "@mui/material";
 import { AddTask, Refresh } from "@mui/icons-material";
-import { Tree } from "react-arborist";
-import TaskItem from "./TaskItem";
+import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 
-// Reordering utilities
-interface ReorderPreferences {
-  [parentTaskId: string]: string[]; // parentTaskId -> ordered task IDs
-}
-
-const REORDER_STORAGE_KEY = "taskReorderPreferences";
-
-const getReorderPreferences = (): ReorderPreferences => {
-  try {
-    const stored = localStorage.getItem(REORDER_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveReorderPreferences = (preferences: ReorderPreferences) => {
-  try {
-    localStorage.setItem(REORDER_STORAGE_KEY, JSON.stringify(preferences));
-  } catch (error) {
-    console.error("Failed to save reorder preferences:", error);
-  }
-};
-
-const clearReorderPreferences = () => {
-  try {
-    localStorage.removeItem(REORDER_STORAGE_KEY);
-  } catch (error) {
-    console.error("Failed to clear reorder preferences:", error);
-  }
-};
-
-const applyUserReordering = (tasks: Task[]): Task[] => {
-  const preferences = getReorderPreferences();
-  const reorderedTasks: Task[] = [];
-
-  // Group tasks by parent
-  const tasksByParent = new Map<string, Task[]>();
-  tasks.forEach((task) => {
-    const parentKey = task.parentTaskId || "root";
-    if (!tasksByParent.has(parentKey)) {
-      tasksByParent.set(parentKey, []);
-    }
-    tasksByParent.get(parentKey)!.push(task);
-  });
-
-  // Apply reordering for each parent group
-  tasksByParent.forEach((parentTasks, parentKey) => {
-    const userOrder = preferences[parentKey];
-
-    if (userOrder && userOrder.length > 0) {
-      // Apply user-defined order
-      const orderedTasks: Task[] = [];
-      const taskMap = new Map(parentTasks.map((task) => [task.id, task]));
-
-      // Add tasks in user-defined order
-      userOrder.forEach((taskId) => {
-        const task = taskMap.get(taskId);
-        if (task) {
-          orderedTasks.push(task);
-          taskMap.delete(taskId);
-        }
-      });
-
-      // Add any remaining tasks (new tasks not in user preferences)
-      taskMap.forEach((task) => orderedTasks.push(task));
-
-      reorderedTasks.push(...orderedTasks);
-    } else {
-      // Use database order (display_order)
-      reorderedTasks.push(
-        ...parentTasks.sort(
-          (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)
-        )
-      );
-    }
-  });
-
-  return reorderedTasks;
-};
+// Simple tree data management like the Gmail demo
 
 interface Task {
   id: string;
@@ -111,58 +31,97 @@ interface Task {
   attachmentCount?: number;
 }
 
-interface TreeNode {
+interface MUITreeItem {
   id: string;
-  name: string; // task title
-  children?: TreeNode[];
-  task: Task; // references the original task
+  label: string;
+  children?: MUITreeItem[];
+  task: Task;
 }
 
-const buildTreeData = (flatTasks: Task[]): TreeNode[] => {
-  const taskMap = new Map<string, TreeNode>(); // map each task's tree node to its id
-  const rootNodes: TreeNode[] = [];
+const buildMUITreeData = (flatTasks: Task[]): MUITreeItem[] => {
+  const taskMap = new Map<string, MUITreeItem>();
+  const rootNodes: MUITreeItem[] = [];
 
-  // create a node for each task and map to the task id
-  flatTasks.forEach((task) => {
-    const node: TreeNode = {
+  // Sort tasks by displayOrder to maintain proper order
+  const sortedTasks = [...flatTasks].sort(
+    (a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)
+  );
+
+  // Create nodes for all tasks
+  sortedTasks.forEach((task) => {
+    const node: MUITreeItem = {
       id: task.id,
-      name: task.title,
+      label: task.title,
       task: task,
-      children: [], // leave children empty in first pass
     };
-
-    // map this task tree node to its id
     taskMap.set(task.id, node);
   });
 
-  // build hierarchy
-  flatTasks.forEach((task) => {
-    // get current task's tree node
+  // Build hierarchy - process root tasks first, then children
+  sortedTasks.forEach((task) => {
     const node = taskMap.get(task.id);
+    if (!node) return;
 
-    // if task has parent: push its node into its parent's children array
     if (task.parentTaskId) {
+      // This is a child task
       const parent = taskMap.get(task.parentTaskId);
-      if (parent && node) {
-        parent.children!.push(node);
+      if (parent) {
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(node);
       }
-    } else if (node) {
-      // if task doesn't have parent: push task into the root node
+    } else {
+      // This is a root task
       rootNodes.push(node);
     }
   });
 
-  console.log(rootNodes);
+  // Sort children within each parent by displayOrder
+  const sortChildren = (nodes: MUITreeItem[]) => {
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        node.children.sort(
+          (a, b) => (a.task.displayOrder || 0) - (b.task.displayOrder || 0)
+        );
+        sortChildren(node.children);
+      }
+    });
+  };
 
+  sortChildren(rootNodes);
+
+  console.log("Built MUI tree with hierarchy:", rootNodes);
+  console.log(
+    "Sample tree structure:",
+    JSON.stringify(rootNodes.slice(0, 2), null, 2)
+  );
   return rootNodes;
+};
+
+// Helper function to get all parent item IDs that have children
+const getAllParentItemIds = (treeData: MUITreeItem[]): string[] => {
+  const parentIds: string[] = [];
+
+  const traverse = (nodes: MUITreeItem[]) => {
+    nodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        parentIds.push(node.id);
+        traverse(node.children);
+      }
+    });
+  };
+
+  traverse(treeData);
+  return parentIds;
 };
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  // Tree data structure for React Arborist
-  const [treeData, setTreeData] = useState<TreeNode[]>([]);
-  // Selection state (optional - React Arborist can manage this)
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Tree data structure for MUI Tree View
+  const [treeData, setTreeData] = useState<MUITreeItem[]>([]);
+  // Controlled state for expanded items
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +130,7 @@ const TaskList: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  // const [newTaskDueDate, setNewTaskDueDate] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [parentTaskId, setParentTaskId] = useState<string | null>(null);
 
@@ -193,39 +152,10 @@ const TaskList: React.FC = () => {
       } else {
         setError(response.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch tasks");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const toggleTaskCompletion = async (
-    taskId: string,
-    currentStatus: boolean
-  ) => {
-    try {
-      const userId = authService.getUserId();
-      if (!userId) return;
-
-      const response = await taskService.setTaskCompleted(
-        taskId,
-        !currentStatus,
-        userId
-      );
-
-      if (response.code === 200) {
-        // Update local state
-        setTasks(
-          tasks.map((task) =>
-            task.id === taskId ? { ...task, completed: !currentStatus } : task
-          )
-        );
-      } else {
-        setError(response.msg);
-      }
-    } catch (err) {
-      setError("Failed to update task");
     }
   };
 
@@ -271,40 +201,17 @@ const TaskList: React.FC = () => {
         //reset form
         setNewTaskTitle("");
         setNewTaskDescription("");
-        setNewTaskDueDate("");
+        // setNewTaskDueDate("");
         setParentTaskId(null);
         setShowCreateForm(false);
       } else {
         setError(response.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Failed to create task");
     } finally {
       setIsCreating(false);
     }
-  };
-
-  const deleteTask = async (taskId: string) => {
-    try {
-      const userId = authService.getUserId();
-      if (!userId) return;
-
-      const response = await taskService.deleteTask(taskId, userId);
-
-      if (response.code === 200) {
-        // Remove from local state
-        setTasks(tasks.filter((task) => task.id !== taskId));
-      } else {
-        setError(response.msg);
-      }
-    } catch (err) {
-      setError("Failed to delete task");
-    }
-  };
-
-  const openCreateSubtaskForm = (parentTaskId: string) => {
-    setParentTaskId(parentTaskId);
-    setShowCreateForm(true);
   };
 
   const openCreateTaskForm = () => {
@@ -312,71 +219,27 @@ const TaskList: React.FC = () => {
     setShowCreateForm(true);
   };
 
+  const handleExpandedItemsChange = (
+    _event: React.SyntheticEvent | null,
+    itemIds: string[]
+  ) => {
+    setExpandedItems(itemIds);
+  };
+
+  const handleItemExpansionToggle = (
+    _event: React.SyntheticEvent | null,
+    itemId: string,
+    isExpanded: boolean
+  ) => {
+    console.log(`Item ${itemId} ${isExpanded ? "expanded" : "collapsed"}`);
+  };
+
   const closeCreateForm = () => {
     setShowCreateForm(false);
     setParentTaskId(null);
     setNewTaskTitle("");
     setNewTaskDescription("");
-    setNewTaskDueDate("");
-  };
-
-  const handleTaskMove = ({ dragNodes, parentNode, index }: any) => {
-    const draggedTask = dragNodes[0];
-
-    if (!draggedTask) return;
-
-    // Only allow reordering within the same parent (no hierarchy changes)
-    const originalParentId = draggedTask.data.task.parentTaskId;
-    const newParentId = parentNode?.data?.task?.id || null;
-
-    // Check if targetParentId is actually a sibling (has the same parent as draggedTask)
-    let actualNewParentId = newParentId;
-    if (newParentId && newParentId !== originalParentId) {
-      const targetTask = tasks.find((t) => t.id === newParentId);
-      if (targetTask && targetTask.parentTaskId === originalParentId) {
-        // This is a sibling, so the actual parent is the same as draggedTask's parent
-        actualNewParentId = originalParentId;
-      }
-    }
-
-    if (originalParentId !== actualNewParentId) {
-      return;
-    }
-
-    try {
-      // Get current reorder preferences
-      const preferences = getReorderPreferences();
-      const parentKey = originalParentId || "root";
-
-      // Get all tasks in the same parent group
-      const siblingTasks = tasks.filter((task) => {
-        const taskParentId = task.parentTaskId || "root";
-        return taskParentId === parentKey;
-      });
-
-      // Create new order by moving the dragged task to the new position
-      const draggedTaskId = draggedTask.data.task.id;
-      const newOrder = [...siblingTasks.map((t) => t.id)];
-
-      // Remove dragged task from its current position
-      const currentIndex = newOrder.indexOf(draggedTaskId);
-      if (currentIndex !== -1) {
-        newOrder.splice(currentIndex, 1);
-      }
-
-      // Insert at new position
-      newOrder.splice(index, 0, draggedTaskId);
-
-      // Save the new order
-      preferences[parentKey] = newOrder;
-      saveReorderPreferences(preferences);
-
-      // Trigger re-render by updating tasks state
-      setTasks([...tasks]);
-    } catch (err) {
-      console.error("Error reordering task:", err);
-      setError("Failed to reorder task");
-    }
+    // setNewTaskDueDate("");
   };
 
   useEffect(() => {
@@ -384,10 +247,13 @@ const TaskList: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Apply user reordering before building tree
-    const reorderedTasks = applyUserReordering(tasks);
-    const tree = buildTreeData(reorderedTasks);
-    setTreeData(tree);
+    // Build MUI tree data from tasks using nested structure
+    const treeData = buildMUITreeData(tasks);
+    setTreeData(treeData);
+
+    // Set all parent items as expanded by default
+    const parentIds = getAllParentItemIds(treeData);
+    setExpandedItems(parentIds);
   }, [tasks]);
 
   if (loading) {
@@ -445,16 +311,6 @@ const TaskList: React.FC = () => {
           >
             Refresh
           </Button>
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={() => {
-              clearReorderPreferences();
-              setTasks([...tasks]); // Trigger re-render
-            }}
-          >
-            Reset Order
-          </Button>
         </Box>
       </Box>
 
@@ -468,71 +324,21 @@ const TaskList: React.FC = () => {
           No tasks found. Create your first task!
         </Typography>
       ) : (
-        <Tree
-          data={treeData}
-          openByDefault={true}
-          width="100%"
-          height={700}
-          indent={48}
-          rowHeight={90}
-          onMove={handleTaskMove}
-          disableDrop={({ parentNode, dragNodes }) => {
-            // Only allow drops within the same parent (no hierarchy changes)
-            const draggedTask = dragNodes[0];
-
-            if (!draggedTask) {
-              return true;
-            }
-
-            const originalParentId = draggedTask.data.task.parentTaskId;
-            const targetParentId = parentNode?.data?.task?.id || null;
-
-            // Check if targetParentId is actually a sibling (has the same parent as draggedTask)
-            let actualTargetParentId = targetParentId;
-            if (targetParentId && targetParentId !== originalParentId) {
-              const targetTask = tasks.find((t) => t.id === targetParentId);
-              if (targetTask && targetTask.parentTaskId === originalParentId) {
-                // This is a sibling, so the actual parent is the same as draggedTask's parent
-                actualTargetParentId = originalParentId;
-              }
-            }
-
-            // Disable drop if trying to move to a different parent
-            return originalParentId !== actualTargetParentId;
-          }}
-          dragPreviewRender={(props) => (
-            <div
-              style={{
-                background: "rgba(0, 0, 0, 0.1)",
-                border: "2px dashed #ccc",
-                padding: "8px",
-                borderRadius: "4px",
-              }}
-            >
-              {props.dragNodes[0]?.data?.name}
-            </div>
-          )}
-        >
-          {({ node, style, dragHandle }) => (
-            <div
-              style={{
-                ...style,
-                cursor: "grab",
-                userSelect: "none",
-              }}
-              ref={dragHandle}
-            >
-              <TaskItem
-                task={node.data.task}
-                index={0} // Tree handles positioning, so index is not critical
-                totalTasks={tasks.length}
-                onToggleCompletion={toggleTaskCompletion}
-                onDelete={deleteTask}
-                onCreateSubtask={openCreateSubtaskForm}
-              />
-            </div>
-          )}
-        </Tree>
+        <Box sx={{ minHeight: 400, flexGrow: 1, maxWidth: 300 }}>
+          <RichTreeView
+            items={treeData}
+            expandedItems={expandedItems}
+            onExpandedItemsChange={handleExpandedItemsChange}
+            onItemExpansionToggle={handleItemExpansionToggle}
+            expansionTrigger="iconContainer"
+            sx={{
+              height: 400,
+              flexGrow: 1,
+              maxWidth: 400,
+              overflowY: "auto",
+            }}
+          />
+        </Box>
       )}
 
       {/* Create Task Dialog */}
