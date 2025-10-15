@@ -149,10 +149,8 @@ class TaskService {
     userId: string
   ): Promise<ApiResponse<any>> {
     try {
-      // Note: setCompleted endpoint not available in current API spec
-      throw new Error(
-        "SetCompleted endpoint not available in current API spec"
-      );
+      const updateData = { isCompleted: completed };
+      const response = await taskApi.updateTask(id, userId, updateData);
       return {
         code: 200,
         msg: "Success",
@@ -195,10 +193,7 @@ class TaskService {
    */
   async getAllTasks(userId: string): Promise<ApiResponse<any>> {
     try {
-      // Note: listAllTasks endpoint not available in current API spec
-      throw new Error(
-        "ListAllTasks endpoint not available in current API spec"
-      );
+      const response = await taskApi.listAllTasks(userId);
       return {
         code: 200,
         msg: "Success",
