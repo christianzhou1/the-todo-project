@@ -61,6 +61,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
       const response = await attachmentService.getUserAttachments(userId);
 
       if (response.code === 200 && response.data) {
+        console.log("Attachments:", response.data);
         setAttachments(response.data);
       } else {
         setError(response.msg);

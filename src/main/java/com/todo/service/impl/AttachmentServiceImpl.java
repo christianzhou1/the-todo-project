@@ -56,7 +56,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .build();
 
             a = attachmentRepo.save(a);
-            return AttachmentMapper.toInfo(a);
+            return AttachmentMapper.toInfo(a, null); // No taskId for unlinked attachments
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -121,7 +121,12 @@ public class AttachmentServiceImpl implements AttachmentService {
     @Transactional(Transactional.TxType.SUPPORTS)
     public List<AttachmentInfo> listByUser(UUID userId) {
         return attachmentRepo.findByUserId(userId).stream()
-                .map(AttachmentMapper::toInfo)
+                .map(attachment -> {
+                    // Find the first task this attachment is linked to
+                    List<TaskAttachment> taskAttachments = taskAttachmentRepo.findByAttachmentId(attachment.getId());
+                    UUID taskId = taskAttachments.isEmpty() ? null : taskAttachments.get(0).getTask().getId();
+                    return AttachmentMapper.toInfo(attachment, taskId);
+                })
                 .toList();
     }
 
@@ -180,7 +185,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             // Remove all task relationships for this attachment
             taskAttachmentRepo.deleteByAttachmentId(attachmentId);
             
-            return AttachmentMapper.toInfo(a);
+            return AttachmentMapper.toInfo(a, null); // No taskId after detaching
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -244,6 +249,10 @@ public class AttachmentServiceImpl implements AttachmentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Attachment does not belong to user");
         }
 
-        return AttachmentMapper.toInfo(a);
+        // Find the first task this attachment is linked to
+        List<TaskAttachment> taskAttachments = taskAttachmentRepo.findByAttachmentId(attachmentId);
+        UUID taskId = taskAttachments.isEmpty() ? null : taskAttachments.get(0).getTask().getId();
+        
+        return AttachmentMapper.toInfo(a, taskId);
     }
 }
