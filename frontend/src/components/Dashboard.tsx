@@ -9,9 +9,17 @@ import AttachmentList from "./AttachmentList.tsx";
 
 const Dashboard: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [attachmentFilterTask, setAttachmentFilterTask] = useState<Task | null>(
+    null
+  );
 
   const handleTaskSelect = (task: Task) => {
     setSelectedTask(task);
+    setAttachmentFilterTask(task); // Also set the attachment filter when a task is selected
+  };
+
+  const handleClearAttachmentFilter = () => {
+    setAttachmentFilterTask(null); // Only clear the attachment filter, not the selected task
   };
 
   return (
@@ -38,7 +46,10 @@ const Dashboard: React.FC = () => {
             </Panel>
             <ResizeHandle />
             <Panel minSize={30}>
-              <AttachmentList />
+              <AttachmentList
+                selectedTask={attachmentFilterTask}
+                onClearFilter={handleClearAttachmentFilter}
+              />
             </Panel>
           </PanelGroup>
         </Panel>

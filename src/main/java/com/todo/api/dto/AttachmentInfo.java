@@ -16,4 +16,5 @@ public class AttachmentInfo {
     private String checksumSha256;
     private Instant createdAt;
     private Instant updatedAt;
+    private UUID taskId;
 }

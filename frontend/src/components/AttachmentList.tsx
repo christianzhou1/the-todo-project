@@ -21,10 +21,25 @@ import {
   DialogActions,
   LinearProgress,
 } from "@mui/material";
-import { Download, Delete, AttachFile, Upload } from "@mui/icons-material";
+import {
+  Download,
+  Delete,
+  AttachFile,
+  Upload,
+  Clear,
+} from "@mui/icons-material";
 import type { AttachmentInfo } from "../generated/api";
+import type { Task } from "./TaskList.tsx";
 
-const AttachmentList: React.FC = () => {
+interface AttachmentListProps {
+  selectedTask: Task | null;
+  onClearFilter?: () => void;
+}
+
+const AttachmentList: React.FC<AttachmentListProps> = ({
+  selectedTask,
+  onClearFilter,
+}) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
@@ -186,6 +201,15 @@ const AttachmentList: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const getFilteredAttachments = () => {
+    return attachments.filter((attachment) => {
+      // If no task is selected, show all attachments
+      if (!selectedTask) return true;
+      // If task is selected, show only attachments for that task
+      return attachment.taskId === selectedTask.id;
+    });
+  };
+
   if (loading) {
     return (
       <Box
@@ -229,7 +253,7 @@ const AttachmentList: React.FC = () => {
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, border: 0 }}>
         <AttachFile sx={{ mr: 1, color: "primary.main" }} />
         <Typography variant="h6" component="h2">
-          My Attachments ({attachments.length})
+          My Attachments ({getFilteredAttachments().length})
         </Typography>
         <Box
           sx={{
@@ -239,8 +263,19 @@ const AttachmentList: React.FC = () => {
             justifyContent: "end",
             px: 3,
             border: 0,
+            gap: 1,
           }}
         >
+          {selectedTask && onClearFilter && (
+            <IconButton
+              edge="end"
+              onClick={onClearFilter}
+              title="Clear filter"
+              color="secondary"
+            >
+              <Clear />
+            </IconButton>
+          )}
           <IconButton
             edge="end"
             onClick={handleUpload}
@@ -252,7 +287,7 @@ const AttachmentList: React.FC = () => {
         </Box>
       </Box>
 
-      {attachments.length === 0 ? (
+      {getFilteredAttachments().length === 0 ? (
         <Box
           sx={{
             flex: 1,
@@ -264,7 +299,9 @@ const AttachmentList: React.FC = () => {
         >
           <AttachFile sx={{ fontSize: 48, color: "text.secondary", mb: 2 }} />
           <Typography variant="body1" color="text.secondary" textAlign="center">
-            No attachments yet
+            {selectedTask
+              ? `No attachments for "${selectedTask.title}"`
+              : "No attachments yet"}
           </Typography>
           <Typography
             variant="body2"
@@ -272,12 +309,14 @@ const AttachmentList: React.FC = () => {
             textAlign="center"
             sx={{ mt: 1 }}
           >
-            Upload files to see them here
+            {selectedTask
+              ? "Upload files for this task to see them here"
+              : "Upload files to see them here"}
           </Typography>
         </Box>
       ) : (
         <List sx={{ flex: 1, overflow: "auto" }}>
-          {attachments.map((attachment, index) => (
+          {getFilteredAttachments().map((attachment, index) => (
             <React.Fragment key={attachment.id || index}>
               <ListItem
                 sx={{
@@ -306,14 +345,21 @@ const AttachmentList: React.FC = () => {
                     </Box>
                   }
                   secondary={
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ mt: 0.5 }}
-                    >
-                      Size: {formatFileSize(attachment.sizeBytes)} • Created:{" "}
-                      {formatDate(attachment.createdAt)}
-                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Size: {formatFileSize(attachment.sizeBytes)} • Created:{" "}
+                        {formatDate(attachment.createdAt)}
+                      </Typography>
+                      {attachment.taskId && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 0.5, fontSize: "0.75rem" }}
+                        >
+                          Task ID: {attachment.taskId}
+                        </Typography>
+                      )}
+                    </Box>
                   }
                 />
                 <Box
@@ -346,7 +392,7 @@ const AttachmentList: React.FC = () => {
                   </Box>
                 </Box>
               </ListItem>
-              {index < attachments.length - 1 && <Divider />}
+              {index < getFilteredAttachments().length - 1 && <Divider />}
             </React.Fragment>
           ))}
         </List>

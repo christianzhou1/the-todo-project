@@ -219,16 +219,27 @@ const CustomTaskTreeItem = React.forwardRef<
                   {task.completed ? <RadioButtonUnchecked /> : <CheckCircle />}
                 </IconButton>
 
-                <Typography
-                  variant="body2"
-                  sx={{
-                    flex: 1,
-                    textDecoration: task.completed ? "line-through" : "none",
-                    color: task.completed ? "text.secondary" : "text.primary",
-                  }}
-                >
-                  {task.title}
-                </Typography>
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      textDecoration: task.completed ? "line-through" : "none",
+                      color: task.completed ? "text.secondary" : "text.primary",
+                    }}
+                  >
+                    {task.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: "text.secondary",
+                      mt: 0.25,
+                    }}
+                  >
+                    ID: {task.id}
+                  </Typography>
+                </Box>
 
                 {task.subtaskCount != null && task.subtaskCount > 0 && (
                   <Chip

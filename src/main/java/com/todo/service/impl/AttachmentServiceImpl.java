@@ -97,7 +97,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .build();
             taskAttachmentRepo.save(taskAttachment);
             
-            return AttachmentMapper.toInfo(a);
+            return AttachmentMapper.toInfo(a, taskId);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -113,7 +113,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         return taskAttachmentRepo.findByTaskId(taskId).stream()
                 .map(TaskAttachment::getAttachment)
                 .filter(attachment -> attachment.getUserId().equals(userId))
-                .map(AttachmentMapper::toInfo)
+                .map(attachment -> AttachmentMapper.toInfo(attachment, taskId))
                 .toList();
     }
 
@@ -156,7 +156,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                     .build();
             taskAttachmentRepo.save(taskAttachment);
             
-            return AttachmentMapper.toInfo(a);
+            return AttachmentMapper.toInfo(a, taskId);
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
