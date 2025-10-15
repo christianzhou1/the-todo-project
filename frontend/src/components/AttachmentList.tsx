@@ -15,14 +15,22 @@ import {
   IconButton,
   Chip,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  LinearProgress,
 } from "@mui/material";
-import { Download, Delete, AttachFile } from "@mui/icons-material";
+import { Download, Delete, AttachFile, Upload } from "@mui/icons-material";
 import type { AttachmentInfo } from "../generated/api";
 
 const AttachmentList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const fetchAttachments = async () => {
     setLoading(true);
@@ -52,6 +60,59 @@ const AttachmentList: React.FC = () => {
   useEffect(() => {
     fetchAttachments();
   }, []);
+
+  const handleUpload = () => {
+    setUploadDialogOpen(true);
+    setSelectedFile(null);
+    setError(null);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setError(null);
+    }
+  };
+
+  const handleUploadSubmit = async () => {
+    if (!selectedFile) {
+      setError("Please select a file");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const userId = authService.getUserId();
+      if (!userId) {
+        setError("User not authenticated");
+        return;
+      }
+
+      const response = await attachmentService.uploadFile(selectedFile, userId);
+
+      if (response.code === 200) {
+        // Refresh the attachment list
+        await fetchAttachments();
+        setUploadDialogOpen(false);
+        setSelectedFile(null);
+      } else {
+        setError(response.msg);
+      }
+    } catch (err) {
+      setError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUploadCancel = () => {
+    setUploadDialogOpen(false);
+    setSelectedFile(null);
+    setError(null);
+  };
 
   const handleDownload = async (attachment: AttachmentInfo) => {
     if (!attachment.id || !attachment.fileName) return;
@@ -165,11 +226,30 @@ const AttachmentList: React.FC = () => {
         overflow: "hidden",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2, border: 0 }}>
         <AttachFile sx={{ mr: 1, color: "primary.main" }} />
         <Typography variant="h6" component="h2">
           My Attachments ({attachments.length})
         </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexGrow: 1,
+            alignItems: "center",
+            justifyContent: "end",
+            px: 3,
+            border: 0,
+          }}
+        >
+          <IconButton
+            edge="end"
+            onClick={handleUpload}
+            title="Upload file"
+            color="primary"
+          >
+            <Upload />
+          </IconButton>
+        </Box>
       </Box>
 
       {attachments.length === 0 ? (
@@ -226,12 +306,14 @@ const AttachmentList: React.FC = () => {
                     </Box>
                   }
                   secondary={
-                    <Box sx={{ mt: 0.5 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Size: {formatFileSize(attachment.sizeBytes)} • Created:{" "}
-                        {formatDate(attachment.createdAt)}
-                      </Typography>
-                    </Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0.5 }}
+                    >
+                      Size: {formatFileSize(attachment.sizeBytes)} • Created:{" "}
+                      {formatDate(attachment.createdAt)}
+                    </Typography>
                   }
                 />
                 <ListItemSecondaryAction>
@@ -260,6 +342,69 @@ const AttachmentList: React.FC = () => {
           ))}
         </List>
       )}
+
+      {/* Upload Dialog */}
+      <Dialog
+        open={uploadDialogOpen}
+        onClose={handleUploadCancel}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Upload File</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <input
+              type="file"
+              onChange={handleFileSelect}
+              disabled={uploading}
+              accept="*/*"
+              style={{ width: "100%", padding: "8px", marginBottom: "16px" }}
+            />
+
+            {selectedFile && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: "grey.100", borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Selected: {selectedFile.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Size: {formatFileSize(selectedFile.size)}
+                </Typography>
+              </Box>
+            )}
+
+            {uploading && (
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
+                  Uploading...
+                </Typography>
+                <LinearProgress />
+              </Box>
+            )}
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUploadCancel} disabled={uploading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUploadSubmit}
+            disabled={!selectedFile || uploading}
+            variant="contained"
+          >
+            {uploading ? "Uploading..." : "Upload"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 };
