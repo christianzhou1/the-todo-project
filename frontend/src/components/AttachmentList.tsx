@@ -316,7 +316,16 @@ const AttachmentList: React.FC = () => {
                     </Typography>
                   }
                 />
-                <ListItemSecondaryAction>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexGrow: 1,
+                    alignItems: "center",
+                    justifyContent: "end",
+                    px: 2,
+                    border: 0,
+                  }}
+                >
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <IconButton
                       edge="end"
@@ -335,7 +344,7 @@ const AttachmentList: React.FC = () => {
                       <Delete />
                     </IconButton>
                   </Box>
-                </ListItemSecondaryAction>
+                </Box>
               </ListItem>
               {index < attachments.length - 1 && <Divider />}
             </React.Fragment>

@@ -194,15 +194,17 @@ const CustomTaskTreeItem = React.forwardRef<
                   borderRadius: 1,
                   cursor: "pointer",
                   backgroundColor: isSelected
-                    ? "primary.main"
+                    ? "inherit"
                     : task.completed
                     ? "action.hover"
                     : "transparent",
                   color: isSelected ? "primary.contrastText" : "inherit",
                   "&:hover": {
-                    backgroundColor: isSelected
-                      ? "primary.dark"
-                      : "action.hover",
+                    backgroundColor: isSelected ? "grey.600" : "action.hover",
+                    // Show delete button on hover
+                    "& .delete-button": {
+                      opacity: 1,
+                    },
                   },
                 }}
               >
@@ -269,6 +271,15 @@ const CustomTaskTreeItem = React.forwardRef<
                   }}
                   color="error"
                   size="small"
+                  className="delete-button"
+                  sx={{
+                    opacity: isSelected ? 1 : 0,
+                    transition: "opacity 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "error.main",
+                      color: "error.contrastText",
+                    },
+                  }}
                 >
                   <Delete />
                 </IconButton>
