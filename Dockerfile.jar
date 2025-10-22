@@ -1,0 +1,19 @@
+# Simple Dockerfile for pre-built JAR
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /app
+
+# Copy the pre-built JAR
+COPY todo-0.0.1-SNAPSHOT.jar app.jar
+
+# Create non-root user
+RUN adduser --disabled-password --gecos "" --home "/nonexistent" --shell "/sbin/nologin" --no-create-home --uid 10001 appuser
+
+# Change ownership
+RUN chown appuser:appuser app.jar
+
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -1,0 +1,118 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  todo-db:
+    image: postgres:17-alpine
+    container_name: todo-db
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-todo_prod_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-YourStrongPassword123!}
+      POSTGRES_DB: todo_prod
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - todo-net
+    restart: unless-stopped
+    # Healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-todo_prod_user} -d todo_prod"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Memory optimization for 1GB VPS
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c effective_cache_size=128MB
+      -c maintenance_work_mem=32MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=4MB
+      -c default_statistics_target=100
+
+  # Spring Boot Backend
+  todo-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.jar
+    container_name: todo-backend
+    environment:
+      # Database Configuration (using your .env.production variables)
+      SPRING_DATASOURCE_URL: "${DATABASE_URL:-jdbc:postgresql://todo-db:5432/todo_prod}"
+      SPRING_DATASOURCE_USERNAME: "${DATABASE_USERNAME:-todo_prod_user}"
+      SPRING_DATASOURCE_PASSWORD: "${DATABASE_PASSWORD:-YourStrongPassword123!}"
+
+      # JWT Configuration
+      JWT_SECRET: "${JWT_SECRET:-your-generated-jwt-secret-64-chars-long}"
+
+      # Server Configuration
+      SERVER_PORT: "${SERVER_PORT:-8080}"
+
+      # AWS Configuration (for S3)
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+      AWS_ACCESS_KEY: "${AWS_ACCESS_KEY:-}"
+      AWS_SECRET_KEY: "${AWS_SECRET_KEY:-}"
+      S3_BUCKET_NAME: "${S3_BUCKET_NAME:-your-bucket-name}"
+      S3_PREFIX: "${S3_PREFIX:-attachments}"
+      STORAGE_TYPE: "${STORAGE_TYPE:-s3}"
+
+      # File Upload Configuration
+      MAX_FILE_SIZE: "${MAX_FILE_SIZE:-25MB}"
+      MAX_REQUEST_SIZE: "${MAX_REQUEST_SIZE:-25MB}"
+
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: production
+
+      # JVM Memory optimization for 1GB VPS
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC -XX:+UseStringDeduplication"
+    depends_on:
+      todo-db:
+        condition: service_healthy
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    networks:
+      - todo-net
+    restart: unless-stopped
+    # Memory optimization
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # Nginx Reverse Proxy (for frontend and backend)
+  nginx:
+    image: nginx:alpine
+    container_name: todo-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - todo-backend
+    networks:
+      - todo-net
+    restart: unless-stopped
+    # Minimal memory usage
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+        reservations:
+          memory: 32M
+
+volumes:
+  postgres-data:
+
+networks:
+  todo-net:
+    driver: bridge

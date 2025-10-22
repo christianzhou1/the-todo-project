@@ -2,7 +2,7 @@ app:
   storage:
     type: ${STORAGE_TYPE:s3}
     s3:
-      bucket: ${S3_BUCKET_NAME:todo-bucket123}
+      bucket: ${S3_BUCKET_NAME:your-bucket-name}
       prefix: ${S3_PREFIX:attachments}
 #    root-dir: ${LOCAL_STORAGE_PATH:./uploads}
 
@@ -22,12 +22,12 @@ spring:
 
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/todo_db}
-    username: ${DATABASE_USERNAME:user-todo}
-    password: ${DATABASE_PASSWORD:todo123}
+    username: ${DATABASE_USERNAME:username}
+    password: ${DATABASE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # dev-friendly; use 'validate' in prod; don't let Hibernate mutate schema
+      ddl-auto: validate # let Flyway manage schema
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -39,14 +39,14 @@ spring:
         init:
           mode: never # set to 'always' if you add schema.sql/data.sql
   flyway:
-    enabled: true
+    enabled: true # Temporarily disable Flyway for testing
     locations: classpath:db/migration
     clean-disabled: true
     schemas: public
     default-schema: public
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/todo_db}
-    user: ${DATABASE_USERNAME:user-todo}
-    password: ${DATABASE_PASSWORD:todo123}
+    user: ${DATABASE_USERNAME:username}
+    password: ${DATABASE_PASSWORD:password}
 
 logging:
   level:
@@ -72,7 +72,7 @@ management:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890}
+  secret: ${JWT_SECRET:your-jwt-secret-key}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
 
 # OpenAPI Configuration

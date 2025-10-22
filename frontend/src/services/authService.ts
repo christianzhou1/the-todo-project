@@ -1,4 +1,4 @@
-import { authApi, type AuthResponse, type LoginRequest } from "./generatedApi";
+import { authApi, type AuthResponse } from "./generatedApi";
 
 export interface ApiResponse<T = any> {
   code: number;

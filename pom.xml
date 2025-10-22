@@ -206,8 +206,8 @@
 				<version>${flyway.version}</version>
 				<configuration>
 					<url>jdbc:postgresql://localhost:5433/todo_db</url>
-					<user>user-todo</user>
-					<password>todo123</password>
+					<user>username</user>
+					<password>password</password>
 					<locations>
 						<location>classpath:db/migration</location>
 					</locations>

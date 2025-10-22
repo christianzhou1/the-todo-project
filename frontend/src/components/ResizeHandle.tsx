@@ -1,17 +1,17 @@
 import {
   PanelResizeHandle,
-  // PanelResizeHandleProps,
   usePanelGroupContext,
 } from "react-resizable-panels";
+import type { PanelResizeHandleProps } from "react-resizable-panels";
 
 import styles from "./ResizeHandle.module.css";
 import Icon from "./Icon";
 
 export function ResizeHandle({
-                               className = "",
-                               id,
-                               ...rest
-                             }: PanelResizeHandleProps & {
+  className = "",
+  id,
+  ...rest
+}: PanelResizeHandleProps & {
   className?: string;
   id?: string;
 }) {

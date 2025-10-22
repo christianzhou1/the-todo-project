@@ -1,7 +1,10 @@
+version: "3.8"
+
 services:
+  # PostgreSQL Database
   todo-db:
     image: postgres:17
-    container_name: todo-db
+    container_name: todo-db-dev
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME:-username}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-password}
@@ -22,9 +25,12 @@ services:
       timeout: 3s
       retries: 10
 
+  # Spring Boot Backend
   todo-backend:
-    image: todo-backend
-    container_name: todo-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo-backend-dev
     environment:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://todo-db:5432/todo_db"
       SPRING_DATASOURCE_USERNAME: "${DATABASE_USERNAME:-username}"
@@ -34,18 +40,39 @@ services:
       AWS_ACCESS_KEY: "${AWS_ACCESS_KEY:-}"
       AWS_SECRET_KEY: "${AWS_SECRET_KEY:-}"
       S3_BUCKET_NAME: "${S3_BUCKET_NAME:-your-bucket-name}"
-      STORAGE_TYPE: "${STORAGE_TYPE:-s3}"
+      STORAGE_TYPE: "${STORAGE_TYPE:-local}"
+      SPRING_PROFILES_ACTIVE: development
     depends_on:
       todo-db:
         condition: service_healthy
     ports:
-      - "${SERVER_PORT:-8080}:8080"
+      - "8080:8080"
     networks:
       - todo-net
+    volumes:
+      - ./uploads:/app/uploads # Mount uploads directory for file storage
+
+  # React Frontend (Development)
+  todo-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: todo-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - todo-net
+    depends_on:
+      - todo-backend
+    environment:
+      - VITE_API_URL=http://localhost:8080
 
 volumes:
-  postgres-data: {}
+  postgres-data:
 
 networks:
   todo-net:
-    external: true
+    driver: bridge

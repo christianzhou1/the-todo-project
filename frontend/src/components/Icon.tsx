@@ -1,4 +1,4 @@
-import { SVGAttributes } from "react";
+import type {SVGAttributes} from "react";
 import styles from "./Icon.module.css";
 
 export type IconType =

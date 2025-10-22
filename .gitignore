@@ -8,6 +8,9 @@ target/
 !.env.example
 uploads/
 documents/
+secrets/
+*.tar
+deployment/
 
 ### STS ###
 .apt_generated

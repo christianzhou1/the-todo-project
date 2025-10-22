@@ -11,7 +11,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   IconButton,
   Chip,
   Divider,
@@ -26,7 +25,8 @@ import {
   Delete,
   AttachFile,
   Upload,
-  Clear, Refresh,
+  Clear,
+  Refresh,
 } from "@mui/icons-material";
 import type { AttachmentInfo } from "../generated/api";
 import type { Task } from "./TaskList.tsx";
