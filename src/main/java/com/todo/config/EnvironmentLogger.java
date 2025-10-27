@@ -5,6 +5,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+
 @Component
 public class EnvironmentLogger implements CommandLineRunner {
 
@@ -46,9 +48,49 @@ public class EnvironmentLogger implements CommandLineRunner {
         System.out.println("Storage Type: " + environment.getProperty("app.storage.type", "NOT_SET"));
         
         // Show which .env file is being used
-        System.out.println("Environment File: .env.local");
+        String envFile = detectEnvironmentFile();
+        System.out.println("Environment File: " + envFile);
         
         System.out.println("=".repeat(60) + "\n");
+    }
+    
+    private String detectEnvironmentFile() {
+        // Check for common .env files in order of priority
+        String[] envFiles = {".env.production", ".env.local", ".env.development", ".env"};
+        
+        // Check current working directory first
+        for (String envFile : envFiles) {
+            File file = new File(envFile);
+            if (file.exists() && file.isFile()) {
+                return envFile + " (found)";
+            }
+        }
+        
+        // Check if we're in Docker and look in common locations
+        String userDir = System.getProperty("user.dir");
+        if (userDir != null) {
+            for (String envFile : envFiles) {
+                File file = new File(userDir, envFile);
+                if (file.exists() && file.isFile()) {
+                    return envFile + " (found in " + userDir + ")";
+                }
+            }
+        }
+        
+        // Check if spring-dotenv is enabled and what file it's using
+        String dotenvEnabled = environment.getProperty("spring.dotenv.enabled", "false");
+        if ("true".equals(dotenvEnabled)) {
+            String dotenvFilename = environment.getProperty("spring.dotenv.filename", ".env");
+            return dotenvFilename + " (spring-dotenv)";
+        }
+        
+        // Check if we're using Docker Compose environment variables
+        String databaseUrl = environment.getProperty("DATABASE_URL");
+        if (databaseUrl != null && databaseUrl.contains("todo-db:5432")) {
+            return "Docker Compose environment variables";
+        }
+        
+        return "none (using system environment variables)";
     }
     
     private String maskSensitiveInfo(String value) {

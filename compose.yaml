@@ -3,9 +3,9 @@ services:
     image: postgres:17
     container_name: todo-db
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME:-username}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-password}
-      POSTGRES_DB: todo_db
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: todo_prod
     ports:
       - "5433:5432"
     volumes:
@@ -16,7 +16,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${DATABASE_USERNAME:-username} -d todo_db || exit 1",
+          "pg_isready -U ${DATABASE_USERNAME} -d todo_prod || exit 1",
         ]
       interval: 5s
       timeout: 3s
@@ -26,14 +26,15 @@ services:
     image: todo-backend
     container_name: todo-backend
     environment:
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://todo-db:5432/todo_db"
-      SPRING_DATASOURCE_USERNAME: "${DATABASE_USERNAME:-username}"
-      SPRING_DATASOURCE_PASSWORD: "${DATABASE_PASSWORD:-password}"
-      JWT_SECRET: "${JWT_SECRET:-your-jwt-secret-key}"
+      DATABASE_URL: "jdbc:postgresql://todo-db:5432/todo_prod"
+      DATABASE_USERNAME: "${DATABASE_USERNAME}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      JWT_SECRET: "${JWT_SECRET}"
       AWS_REGION: "${AWS_REGION:-us-east-2}"
-      AWS_ACCESS_KEY: "${AWS_ACCESS_KEY:-}"
-      AWS_SECRET_KEY: "${AWS_SECRET_KEY:-}"
-      S3_BUCKET_NAME: "${S3_BUCKET_NAME:-your-bucket-name}"
+      AWS_ACCESS_KEY: "${AWS_ACCESS_KEY}"
+      AWS_SECRET_KEY: "${AWS_SECRET_KEY}"
+      S3_BUCKET_NAME: "${S3_BUCKET_NAME}"
+      S3_PREFIX: "${S3_PREFIX:-attachments}"
       STORAGE_TYPE: "${STORAGE_TYPE:-s3}"
     depends_on:
       todo-db:

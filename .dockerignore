@@ -47,7 +47,7 @@ README.md
 **/nbbuild
 **/nbdist
 **/nbproject/private
-**/target
+# **/target  # Commented out to allow JAR files in target/ directory
 *.ctxt
 .mtj.tmp
 .mvn/timing.properties

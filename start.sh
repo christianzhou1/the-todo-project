@@ -3,16 +3,18 @@
 echo "Starting Todo Application..."
 echo
 
-# Check if .env.local exists
-if [ -f .env.local ]; then
-    echo "Found .env.local - loading environment variables"
+# Check if .env.production exists
+if [ -f .env.production ]; then
+    echo "Found .env.production - loading environment variables"
     
-    # Load environment variables from .env.local
-    export $(cat .env.local | grep -v '^#' | xargs)
+    # Load environment variables from .env.production
+    set -a  # automatically export all variables
+    source .env.production
+    set +a  # stop automatically exporting
     
-    echo "Environment variables loaded from .env.local"
+    echo "Environment variables loaded from .env.production"
 else
-    echo "No .env.local file found - using system environment variables"
+    echo "No .env.production file found - using system environment variables"
 fi
 
 echo

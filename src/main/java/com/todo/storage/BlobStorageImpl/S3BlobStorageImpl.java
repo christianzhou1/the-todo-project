@@ -29,7 +29,7 @@ public class S3BlobStorageImpl implements BlobStorage {
     @Value("${app.storage.s3.bucket}")
     private String bucket;
 
-    @Value("${app.storage.s3.prefix:attachments}")
+    @Value("${app.storage.s3.prefix}")
     private String prefix;
 
 

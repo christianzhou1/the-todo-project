@@ -1,5 +1,5 @@
-import React from "react";
-import { Paper, Typography, Box, Chip, Divider } from "@mui/material";
+import React, { useState } from "react";
+import { Paper, Typography, Box, Chip, Divider, Button } from "@mui/material";
 import {
   CheckCircle,
   RadioButtonUnchecked,
@@ -8,17 +8,31 @@ import {
   Description,
   AttachFile,
   SubdirectoryArrowRight,
+  Link,
 } from "@mui/icons-material";
 import type { Task } from "./TaskList";
+import AttachToTaskDialog from "./AttachToTaskDialog";
 
 interface TaskDetailProps {
   selectedTask: Task | null;
 }
 
 const TaskDetail: React.FC<TaskDetailProps> = ({ selectedTask }) => {
+  const [attachDialogOpen, setAttachDialogOpen] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  };
+
+  const handleAttachDialogClose = () => {
+    setAttachDialogOpen(false);
+  };
+
+  const handleAttachmentAttached = () => {
+    // This could trigger a refresh of the task data or attachment list
+    // For now, we'll just close the dialog
+    setAttachDialogOpen(false);
   };
 
   if (!selectedTask) {
@@ -145,6 +159,29 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ selectedTask }) => {
           </Box>
         </Box>
 
+        {/* Attach Files Section */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            Attachments
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<Link />}
+            onClick={() => setAttachDialogOpen(true)}
+            size="small"
+            sx={{ mb: 1 }}
+          >
+            Attach Existing Files
+          </Button>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: "0.75rem" }}
+          >
+            Link existing files from your attachment library to this task.
+          </Typography>
+        </Box>
+
         {/* Timestamps */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
@@ -176,6 +213,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ selectedTask }) => {
           </Typography>
         </Box>
       </Box>
+
+      <AttachToTaskDialog
+        open={attachDialogOpen}
+        onClose={handleAttachDialogClose}
+        taskId={selectedTask.id}
+        taskTitle={selectedTask.title}
+        onAttachmentAttached={handleAttachmentAttached}
+      />
     </Paper>
   );
 };

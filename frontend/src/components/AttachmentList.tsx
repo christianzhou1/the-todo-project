@@ -27,9 +27,11 @@ import {
   Upload,
   Clear,
   Refresh,
+  Visibility,
 } from "@mui/icons-material";
 import type { AttachmentInfo } from "../generated/api";
 import type { Task } from "./TaskList.tsx";
+import AttachmentPreview from "./AttachmentPreview";
 
 interface AttachmentListProps {
   selectedTask: Task | null;
@@ -46,6 +48,9 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewAttachment, setPreviewAttachment] =
+    useState<AttachmentInfo | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const fetchAttachments = async () => {
     setLoading(true);
@@ -190,6 +195,11 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
     }
   };
 
+  const handlePreview = (attachment: AttachmentInfo) => {
+    setPreviewAttachment(attachment);
+    setPreviewOpen(true);
+  };
+
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return "Unknown size";
     const sizes = ["Bytes", "KB", "MB", "GB"];
@@ -253,34 +263,62 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
     >
       <Box sx={{ display: "flex", alignItems: "center", mb: 2, border: 0 }}>
         <AttachFile sx={{ mr: 1, color: "primary.main" }} />
-        <Typography variant="h6" component="h2">
-          My Attachments ({getFilteredAttachments().length})
-        </Typography>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="h6" component="h2">
+            My Attachments ({getFilteredAttachments().length})
+          </Typography>
+          {selectedTask && (
+            <Typography
+              variant="body2"
+              color="primary.contrastText"
+              sx={{
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                mt: 0.5,
+                backgroundColor: "primary.dark",
+                px: 1,
+                py: 0.5,
+                borderRadius: 0.5,
+                border: "1px solid",
+                borderColor: "primary.main",
+              }}
+            >
+              <Clear sx={{ fontSize: 16 }} />
+              Filtered by: "{selectedTask.title}"
+            </Typography>
+          )}
+        </Box>
         <Box
           sx={{
             display: "flex",
-            flexGrow: 1,
             alignItems: "center",
-            justifyContent: "end",
-            px: 3,
-            border: 0,
             gap: 1,
           }}
         >
           {selectedTask && onClearFilter && (
-            <IconButton
-              edge="end"
-              onClick={onClearFilter}
-              title="Clear filter"
+            <Button
+              variant="contained"
               color="secondary"
+              startIcon={<Clear />}
+              onClick={onClearFilter}
+              size="small"
+              sx={{
+                backgroundColor: "secondary.main",
+                "&:hover": {
+                  backgroundColor: "secondary.dark",
+                },
+              }}
             >
-              <Clear />
-            </IconButton>
+              Clear Filter
+            </Button>
           )}
           <Button
             variant="outlined"
             startIcon={<Refresh />}
             onClick={fetchAttachments}
+            size="small"
           >
             Refresh
           </Button>
@@ -383,6 +421,14 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <IconButton
                       edge="end"
+                      onClick={() => handlePreview(attachment)}
+                      title="Preview file"
+                      color="info"
+                    >
+                      <Visibility />
+                    </IconButton>
+                    <IconButton
+                      edge="end"
                       onClick={() => handleDownload(attachment)}
                       title="Download file"
                       color="primary"
@@ -468,6 +514,15 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AttachmentPreview
+        attachment={previewAttachment}
+        open={previewOpen}
+        onClose={() => {
+          setPreviewOpen(false);
+          setPreviewAttachment(null);
+        }}
+      />
     </Paper>
   );
 };

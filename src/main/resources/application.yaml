@@ -2,18 +2,22 @@ app:
   storage:
     type: ${STORAGE_TYPE:s3}
     s3:
-      bucket: ${S3_BUCKET_NAME:your-bucket-name}
+      bucket: ${S3_BUCKET_NAME}
       prefix: ${S3_PREFIX:attachments}
 #    root-dir: ${LOCAL_STORAGE_PATH:./uploads}
 
 spring:
+  # Enable spring-dotenv to load .env.production file
+  dotenv:
+    enabled: true
+    location: .env.production
   cloud:
     aws:
       region:
         static: ${AWS_REGION:us-east-2}
       credentials:
-        access-key: ${AWS_ACCESS_KEY:}
-        secret-key: ${AWS_SECRET_KEY:}
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
 
   servlet:
     multipart:
@@ -21,9 +25,9 @@ spring:
       max-request-size: ${MAX_REQUEST_SIZE:25MB}
 
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/todo_db}
-    username: ${DATABASE_USERNAME:username}
-    password: ${DATABASE_PASSWORD:password}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -44,9 +48,9 @@ spring:
     clean-disabled: true
     schemas: public
     default-schema: public
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/todo_db}
-    user: ${DATABASE_USERNAME:username}
-    password: ${DATABASE_PASSWORD:password}
+    url: ${DATABASE_URL}
+    user: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
 
 logging:
   level:
@@ -54,12 +58,27 @@ logging:
     org.springframework.security: debug
     com.todo.security: debug
     com.todo.controller: debug
+    org.flywaydb: debug
+    # HTTP request debugging
+    org.apache.coyote.http11: debug
+    org.apache.catalina.connector: debug
+    org.apache.tomcat.util.net: debug
     # runs db/migration scripts automatically
 
 server:
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
+  # HTTPS Configuration
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+    key-store: ${SSL_KEYSTORE}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD}
+    key-store-type: ${SSL_KEYSTORE_TYPE}
+    key-alias: ${SSL_KEY_ALIAS}
+  # HTTP to HTTPS redirect (optional)
+  # http2:
+  #   enabled: true
 
 management:
   endpoints:
@@ -72,7 +91,7 @@ management:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:your-jwt-secret-key}
+  secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
 
 # OpenAPI Configuration

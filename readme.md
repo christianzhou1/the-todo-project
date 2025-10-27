@@ -53,22 +53,22 @@ Features user authentication, task management, file attachments, and a responsiv
 Start the entire application with Docker Compose:
 
 ```bash
-# Start all services (database, backend, frontend)
-docker compose -f docker-compose.dev.yml up -d
+# Start all services (database, backend, frontend) with clean build
+docker compose -f docker-compose.prod.yml --env-file .env.production up --build -d
 
 # View logs
-docker compose -f docker-compose.dev.yml logs -f
+docker compose -f docker-compose.prod.yml logs -f
 
 # Stop all services
-docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.prod.yml down
 ```
 
 **Access Points:**
 
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost (via Nginx)
 - **Backend API**: http://localhost:8080/api
-- **API Documentation**: http://localhost:8080/swagger-ui.html
-- **OpenAPI Spec**: http://localhost:8080/api-docs
+- **API Documentation**: http://localhost:8080/api/swagger-ui.html
+- **OpenAPI Spec**: http://localhost:8080/api/api-docs
 
 ### Option 2: Local Development
 
@@ -313,18 +313,35 @@ Run linting:
 npm run lint
 ```
 
-### Full Stack Build
+### Full Stack Build (Clean Build)
 
-Build both frontend and backend:
+Build both frontend and backend with clean builds:
 
 ```bash
-# Build backend
-./mvnw clean package -DskipTests
+# Build backend (clean build)
+./mvnw clean
+./mvnw package -DskipTests
 
-# Build frontend
+# Build frontend (clean build)
 cd frontend
+npm ci
 npm run build
 cd ..
+```
+
+### Docker Clean Build Commands
+
+For production deployments, always use clean builds:
+
+```bash
+# Clean Docker build (removes cached layers)
+docker-compose -f docker-compose.prod.yml build --no-cache
+
+# Clean Docker build and start
+docker-compose -f docker-compose.prod.yml --env-file .env.production up --build
+
+# Clean up old Docker images
+docker image prune -f
 ```
 
 ---
@@ -408,8 +425,7 @@ todo/
 │   │   └── config/                  # Frontend configuration
 │   ├── package.json                 # Frontend dependencies
 │   └── vite.config.ts               # Vite configuration
-├── docker-compose.prod.yml          # Production Docker setup
-├── docker-compose.dev.yml           # Development Docker setup
+├── docker-compose.prod.yml          # Docker setup for all environments
 ├── Dockerfile                       # Backend Docker image
 ├── Dockerfile.jar                   # JAR-based Docker image
 ├── frontend/Dockerfile.dev          # Frontend development Docker image
@@ -466,6 +482,18 @@ This application can be deployed to a VPS using Docker Compose with the followin
 
 Use the automated deployment script:
 
+#### Option 1: PowerShell (Windows - Recommended)
+
+```powershell
+# Run PowerShell deployment script
+.\deploy.ps1.bat
+
+# Or run directly in PowerShell
+powershell -ExecutionPolicy Bypass -File deploy-production.ps1
+```
+
+#### Option 2: Bash (Linux/macOS/Git Bash)
+
 ```bash
 # Make script executable
 chmod +x deploy-production.sh
@@ -479,13 +507,15 @@ chmod +x deploy-production.sh
 #### 1. Build Frontend and Backend
 
 ```bash
-# Build frontend
+# Build backend JAR (clean build)
+./mvnw clean
+./mvnw package -DskipTests
+
+# Build frontend (clean build)
 cd frontend
+npm ci
 npm run build
 cd ..
-
-# Build backend JAR
-./mvnw clean package -DskipTests
 ```
 
 #### 2. Prepare Files for Upload
@@ -523,7 +553,8 @@ cd /opt/todo-app
 # Fix file permissions
 chmod -R 755 frontend/dist/
 
-# Deploy application
+# Deploy application (with clean build)
+docker-compose -f docker-compose.prod.yml --env-file .env.production build --no-cache
 docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
 ```
 
@@ -538,10 +569,10 @@ DATABASE_USERNAME=todo_prod_user
 DATABASE_PASSWORD=YourStrongPassword123!
 
 # JWT Configuration
-JWT_SECRET=your-generated-jwt-secret-64-chars-long
+JWT_SECRET=your-64-character-jwt-secret-key-here
 
 # AWS Configuration (if using S3)
-AWS_REGION=us-east-1
+AWS_REGION=us-east-2
 AWS_ACCESS_KEY=your-access-key
 AWS_SECRET_KEY=your-secret-key
 S3_BUCKET_NAME=your-bucket-name

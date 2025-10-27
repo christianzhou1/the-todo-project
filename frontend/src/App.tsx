@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { authService } from "./services";
 import LoginForm from "./components/LoginForm";
+import RegistrationForm from "./components/RegistrationForm";
 import Dashboard from "./components/Dashboard";
 import "./App.css";
 import {
@@ -21,9 +22,14 @@ const theme = createTheme({
     mode: "dark",
     primary: {
       main: "#90caf9",
+      dark: "#1976d2",
+      darker: "#1565c0",
+      contrastText: "#ffffff",
     },
     secondary: {
       main: "#f48fb1",
+      dark: "#c2185b",
+      contrastText: "#ffffff",
     },
     background: {
       default: "#121212",
@@ -39,6 +45,7 @@ const theme = createTheme({
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showRegistration, setShowRegistration] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -53,6 +60,19 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
+  };
+
+  const handleRegistrationSuccess = () => {
+    // After successful registration, switch to login form
+    setShowRegistration(false);
+  };
+
+  const handleSwitchToRegistration = () => {
+    setShowRegistration(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setShowRegistration(false);
   };
 
   const handleLogout = async () => {
@@ -120,7 +140,17 @@ function App() {
               maxWidth="sm"
               sx={{ height: "100%", display: "flex", alignItems: "center" }}
             >
-              <LoginForm onLoginSuccess={handleLoginSuccess} />
+              {showRegistration ? (
+                <RegistrationForm
+                  onRegistrationSuccess={handleRegistrationSuccess}
+                  onSwitchToLogin={handleSwitchToLogin}
+                />
+              ) : (
+                <LoginForm
+                  onLoginSuccess={handleLoginSuccess}
+                  onSwitchToRegistration={handleSwitchToRegistration}
+                />
+              )}
             </Container>
           ) : (
             <Dashboard />

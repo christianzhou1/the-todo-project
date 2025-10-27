@@ -222,6 +222,32 @@ class AttachmentService {
       return false;
     }
   }
+
+  /**
+   * Get file content as text for text files
+   */
+  async getFileAsText(
+    attachmentId: string,
+    userId: string
+  ): Promise<ApiResponse<string>> {
+    try {
+      const response = await attachmentApi.download(attachmentId, userId, {
+        responseType: "text",
+      });
+      return {
+        code: 200,
+        msg: "File content retrieved successfully",
+        data: response.data as string,
+      };
+    } catch (error: any) {
+      console.error("Get file as text error:", error);
+
+      return {
+        code: error.response?.status || 500,
+        msg: error.response?.data?.msg || "Failed to get file content.",
+      };
+    }
+  }
 }
 
 export const attachmentService = new AttachmentService();

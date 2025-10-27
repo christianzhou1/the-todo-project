@@ -14,12 +14,23 @@ const Dashboard: React.FC = () => {
   );
 
   const handleTaskSelect = (task: Task) => {
-    setSelectedTask(task);
-    setAttachmentFilterTask(task); // Also set the attachment filter when a task is selected
+    // If clicking the same task, deselect it
+    if (selectedTask?.id === task.id) {
+      setSelectedTask(null);
+      setAttachmentFilterTask(null);
+    } else {
+      setSelectedTask(task);
+      setAttachmentFilterTask(task); // Also set the attachment filter when a task is selected
+    }
   };
 
   const handleClearAttachmentFilter = () => {
     setAttachmentFilterTask(null); // Only clear the attachment filter, not the selected task
+  };
+
+  const handleTaskDeselect = () => {
+    setSelectedTask(null);
+    setAttachmentFilterTask(null);
   };
 
   return (
@@ -35,6 +46,7 @@ const Dashboard: React.FC = () => {
         <Panel defaultSize={50} minSize={20}>
           <TaskList
             onTaskSelect={handleTaskSelect}
+            onTaskDeselect={handleTaskDeselect}
             selectedTaskId={selectedTask?.id}
           />
         </Panel>

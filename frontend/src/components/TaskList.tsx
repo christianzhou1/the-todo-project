@@ -194,13 +194,17 @@ const CustomTaskTreeItem = React.forwardRef<
                   borderRadius: 1,
                   cursor: "pointer",
                   backgroundColor: isSelected
-                    ? "inherit"
+                    ? "primary.dark"
                     : task.completed
                     ? "action.hover"
                     : "transparent",
                   color: isSelected ? "primary.contrastText" : "inherit",
+                  border: isSelected ? "2px solid" : "2px solid transparent",
+                  borderColor: isSelected ? "primary.main" : "transparent",
                   "&:hover": {
-                    backgroundColor: isSelected ? "grey.600" : "action.hover",
+                    backgroundColor: isSelected
+                      ? "primary.darker"
+                      : "action.hover",
                     // Show delete button on hover
                     "& .delete-button": {
                       opacity: 1,
@@ -308,11 +312,13 @@ const CustomTaskTreeItem = React.forwardRef<
 
 interface TaskListProps {
   onTaskSelect: (task: Task) => void;
+  onTaskDeselect: () => void;
   selectedTaskId?: string;
 }
 
 const TaskList: React.FC<TaskListProps> = ({
   onTaskSelect,
+  onTaskDeselect,
   selectedTaskId,
 }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -545,83 +551,117 @@ const TaskList: React.FC<TaskListProps> = ({
         flexDirection: "column",
         overflow: "hidden",
       }}
+      onClick={(e) => {
+        // If clicking on the Paper itself (not on a task), deselect
+        if (e.target === e.currentTarget) {
+          onTaskDeselect();
+        }
+      }}
     >
-      {tasks.length === 0 ? (
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          display="flex"
+          px={0}
+          justifyContent={"space-evenly"}
+          gap={2}
+          mb={2}
         >
-          <Typography variant="body1" color="text.secondary" textAlign="center">
-            No tasks found. Create your first task!
-          </Typography>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          <Box
-            display="flex"
-            px={0}
-            justifyContent={"space-evenly"}
-            gap={2}
-            mb={2}
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddTask />}
+            onClick={openCreateTaskForm}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<AddTask />}
-              onClick={openCreateTaskForm}
-            >
-              Create Task
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Refresh />}
-              onClick={fetchTasks}
-            >
-              Refresh
-            </Button>
-          </Box>
-          <RichTreeView
-            items={treeData}
-            expandedItems={expandedItems}
-            onExpandedItemsChange={handleExpandedItemsChange}
-            onItemExpansionToggle={handleItemExpansionToggle}
-            expansionTrigger="iconContainer"
-            slots={{
-              item: (props) => {
-                const task = tasks.find((t) => t.id === props.itemId);
-                if (!task) return null;
+            Create Task
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={fetchTasks}
+          >
+            Refresh
+          </Button>
+        </Box>
 
-                return (
-                  <CustomTaskTreeItem
-                    {...props}
-                    task={task}
-                    onToggleCompletion={toggleTaskCompletion}
-                    onDelete={deleteTask}
-                    onCreateSubtask={openCreateSubtaskForm}
-                    onTaskSelect={onTaskSelect}
-                    isSelected={selectedTaskId === task.id}
-                  />
-                );
-              },
-            }}
+        {tasks.length === 0 ? (
+          <Box
             sx={{
               flex: 1,
-              overflowY: "auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
-        </Box>
-      )}
+          >
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              textAlign="center"
+            >
+              No tasks found. Create your first task!
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            {selectedTaskId && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1,
+                  backgroundColor: "primary.dark",
+                  color: "primary.contrastText",
+                  borderRadius: 1,
+                  textAlign: "center",
+                  border: "1px solid",
+                  borderColor: "primary.main",
+                }}
+              >
+                <Typography variant="body2">
+                  Selected: {tasks.find((t) => t.id === selectedTaskId)?.title}
+                </Typography>
+                <Typography variant="caption">
+                  Click the task again or click empty space to deselect
+                </Typography>
+              </Box>
+            )}
+            <RichTreeView
+              items={treeData}
+              expandedItems={expandedItems}
+              onExpandedItemsChange={handleExpandedItemsChange}
+              onItemExpansionToggle={handleItemExpansionToggle}
+              expansionTrigger="iconContainer"
+              slots={{
+                item: (props) => {
+                  const task = tasks.find((t) => t.id === props.itemId);
+                  if (!task) return null;
+
+                  return (
+                    <CustomTaskTreeItem
+                      {...props}
+                      task={task}
+                      onToggleCompletion={toggleTaskCompletion}
+                      onDelete={deleteTask}
+                      onCreateSubtask={openCreateSubtaskForm}
+                      onTaskSelect={onTaskSelect}
+                      isSelected={selectedTaskId === task.id}
+                    />
+                  );
+                },
+              }}
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+              }}
+            />
+          </>
+        )}
+      </Box>
 
       {/* Create Task Dialog */}
       <Dialog

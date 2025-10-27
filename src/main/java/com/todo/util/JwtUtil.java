@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -13,13 +15,46 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Component
+@Slf4j
 public class JwtUtil {
 
-    @Value("${jwt.secret:your-jwt-secret-key}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
     private Long expiration;
+
+    @PostConstruct
+    public void validateJwtConfiguration() {
+        log.info("JWT Configuration validation:");
+        log.info("  - Secret configured: {}", secret != null ? "YES" : "NO");
+        log.info("  - Secret length: {}", secret != null ? secret.length() : 0);
+        log.info("  - Secret starts with: {}", secret != null ? secret.substring(0, Math.min(8, secret.length())) + "..." : "null");
+        log.info("  - Expiration: {} ms ({} hours)", expiration, expiration / 3600000);
+        
+        // Validate JWT secret requirements
+        if (secret == null || secret.trim().isEmpty()) {
+            log.error("CRITICAL ERROR: JWT_SECRET environment variable is not set!");
+            throw new IllegalStateException("JWT_SECRET environment variable must be set for security reasons");
+        }
+        
+        if (secret.length() < 32) {
+            log.error("CRITICAL ERROR: JWT_SECRET is too short ({} characters). Minimum 32 characters required for security.", secret.length());
+            throw new IllegalStateException("JWT_SECRET must be at least 32 characters long for security");
+        }
+        
+        // Check for common weak secrets
+        if (secret.equals("your-64-character-jwt-secret-key-here") || 
+            secret.equals("your-jwt-secret-key") ||
+            secret.equals("secret") ||
+            secret.equals("password") ||
+            secret.length() < 32) {
+            log.error("CRITICAL ERROR: JWT_SECRET appears to be a default/weak value!");
+            throw new IllegalStateException("JWT_SECRET must be a strong, randomly generated secret - not a default value");
+        }
+        
+        log.info("✅ JWT secret validation passed - using secure secret from environment variables");
+    }
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -33,9 +68,6 @@ public class JwtUtil {
 
     private String createToken(Map<String, Object> claims, String subject) {
         long currentTime = System.currentTimeMillis();
-        System.out.println("JWT Generation - Current time: " + currentTime);
-        System.out.println("JWT Generation - Subject: " + subject);
-        System.out.println("JWT Generation - Claims: " + claims);
         
         String token = Jwts.builder()
                 .claims(claims)
@@ -45,7 +77,6 @@ public class JwtUtil {
                 .signWith(getSigningKey())
                 .compact();
                 
-        System.out.println("JWT Generation - Generated token: " + token.substring(0, Math.min(50, token.length())) + "...");
         return token;
     }
 

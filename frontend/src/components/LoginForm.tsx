@@ -1,12 +1,24 @@
 import React, { useState } from "react";
 import { authService } from "../services";
-import {Alert, Box, Button, Paper, TextField, Typography} from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  Link,
+} from "@mui/material";
 
 interface LoginFormProps {
   onLoginSuccess: () => void;
+  onSwitchToRegistration: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+const LoginForm: React.FC<LoginFormProps> = ({
+  onLoginSuccess,
+  onSwitchToRegistration,
+}) => {
   const [formData, setFormData] = useState({
     usernameOrEmail: "",
     password: "",
@@ -51,15 +63,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       sx={{
         p: 4,
         maxWidth: 400,
-        mx: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2
+        mx: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
       }}
     >
-      <Typography variant="h4" component="h2" textAlign="center" gutterBottom>Login</Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
-
+      <Typography variant="h4" component="h2" textAlign="center" gutterBottom>
+        Login
+      </Typography>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
         <TextField
           label="usernameOrEmail"
           name="usernameOrEmail"
@@ -83,12 +100,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           variant="outlined"
         />
 
-
-        {error && (
-          <Alert severity="error">
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error">{error}</Alert>}
 
         <Button
           type="submit"
@@ -99,6 +111,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
         >
           {loading ? "Logging in..." : "Login"}
         </Button>
+
+        <Box textAlign="center" sx={{ mt: 2 }}>
+          <Typography variant="body2">
+            Don't have an account?{" "}
+            <Link
+              component="button"
+              type="button"
+              onClick={onSwitchToRegistration}
+              disabled={loading}
+              sx={{ textDecoration: "none" }}
+            >
+              Register here
+            </Link>
+          </Typography>
+        </Box>
       </Box>
     </Paper>
   );

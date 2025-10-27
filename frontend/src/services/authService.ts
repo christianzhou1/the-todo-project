@@ -1,4 +1,10 @@
-import { authApi, type AuthResponse } from "./generatedApi";
+import {
+  authApi,
+  userApi,
+  type AuthResponse,
+  type CreateUserRequest,
+  type UserInfo,
+} from "./generatedApi";
 
 export interface ApiResponse<T = any> {
   code: number;
@@ -131,6 +137,43 @@ class AuthService {
    */
   getUserId(): string | null {
     return localStorage.getItem("userId");
+  }
+
+  /**
+   * User registration
+   */
+  async register(
+    username: string,
+    email: string,
+    password: string,
+    firstName?: string,
+    lastName?: string
+  ): Promise<ApiResponse<UserInfo>> {
+    try {
+      const createUserRequest: CreateUserRequest = {
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+      };
+
+      const response = await userApi.createUser(createUserRequest);
+
+      return {
+        code: 201,
+        msg: "Registration successful",
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      return {
+        code: error.response?.status || 500,
+        msg:
+          error.response?.data?.msg || "Registration failed. Please try again.",
+      };
+    }
   }
 }
 

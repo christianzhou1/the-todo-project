@@ -1,13 +1,13 @@
-# PowerShell script to start Todo Application with .env.local
+# PowerShell script to start Todo Application with .env.production
 Write-Host "Starting Todo Application..." -ForegroundColor Green
 Write-Host ""
 
-# Check if .env.local exists
-if (Test-Path ".env.local") {
-    Write-Host "Found .env.local - loading environment variables" -ForegroundColor Yellow
+# Check if .env.production exists
+if (Test-Path ".env.production") {
+    Write-Host "Found .env.production - loading environment variables" -ForegroundColor Yellow
     
-    # Load environment variables from .env.local
-    Get-Content ".env.local" | ForEach-Object {
+    # Load environment variables from .env.production
+    Get-Content ".env.production" | ForEach-Object {
         if ($_ -match "^([^#][^=]+)=(.*)$") {
             $key = $matches[1].Trim()
             $value = $matches[2].Trim()
@@ -15,9 +15,9 @@ if (Test-Path ".env.local") {
             Write-Host "  $key = [HIDDEN]" -ForegroundColor Gray
         }
     }
-    Write-Host "Environment variables loaded from .env.local" -ForegroundColor Green
+    Write-Host "Environment variables loaded from .env.production" -ForegroundColor Green
 } else {
-    Write-Host "No .env.local file found - using system environment variables" -ForegroundColor Yellow
+    Write-Host "No .env.production file found - using system environment variables" -ForegroundColor Yellow
 }
 
 Write-Host ""
