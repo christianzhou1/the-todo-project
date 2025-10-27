@@ -67,9 +67,9 @@ scp -r deployment/dist $VPS_HOST:$APP_DIR/frontend/
 
 
 print_status "✅ SCP build to VPS completed successfully!"
-print_warning "Your Todo App is now running at: http://$VPS_IP"
-print_warning "Frontend: http://$VPS_IP"
-print_warning "API: http://$VPS_IP/api"
-print_warning "API Docs: http://$VPS_IP/api/api-docs"
+print_warning "Your Todo App is now running at: https://$VPS_IP"
+print_warning "Frontend: https://$VPS_IP"
+print_warning "API: https://$VPS_IP/api"
+print_warning "API Docs: https://$VPS_IP/api/api-docs"
 
 echo -e "${GREEN}🎉 SCP build to VPS complete!${NC}"

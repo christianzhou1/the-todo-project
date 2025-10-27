@@ -9,8 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:api": "openapi-generator-cli generate -i http://localhost:8080/api/api-docs -g typescript-axios -o src/generated/api --additional-properties=typescriptThreePlus=true,supportsES6=true,withInterfaces=true,npmName=@todo/api-client,npmVersion=1.0.0",
+    "generate:api:prod": "openapi-generator-cli generate -i https://todo.christianzhou.com/api/api-docs -g typescript-axios -o src/generated/api --additional-properties=typescriptThreePlus=true,supportsES6=true,withInterfaces=true,npmName=@todo/api-client,npmVersion=1.0.0",
     "generate:api:local": "openapi-generator-cli generate -i ./api-spec.json -g typescript-axios -o src/generated/api --additional-properties=typescriptThreePlus=true,supportsES6=true,withInterfaces=true,npmName=@todo/api-client,npmVersion=1.0.0",
-    "fetch:api-spec": "curl http://localhost:8080/api/api-docs > api-spec.json"
+    "fetch:api-spec": "curl http://localhost:8080/api/api-docs > api-spec.json",
+    "fetch:api-spec:prod": "curl https://todo.christianzhou.com/api/api-docs > api-spec.json"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

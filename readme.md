@@ -589,9 +589,9 @@ MAX_REQUEST_SIZE=25MB
 
 After successful deployment:
 
-- **Frontend**: http://your-vps-ip
-- **API**: http://your-vps-ip/api
-- **API Docs**: http://your-vps-ip/api/api-docs
+- **Frontend**: https://your-vps-ip
+- **API**: https://your-vps-ip/api
+- **API Docs**: https://your-vps-ip/api/api-docs
 - **Health Check**: http://your-vps-ip/health
 
 ### Monitoring and Maintenance

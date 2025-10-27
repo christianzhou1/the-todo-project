@@ -46,8 +46,8 @@ Deploy to your VPS server using the same Docker Compose approach.
    ```
 
 2. **Access the application**:
-   - Your app: http://your-vps-ip
-   - API: http://your-vps-ip/api
+   - Your app: https://your-vps-ip
+   - API: https://your-vps-ip/api
 
 ### Configuration:
 

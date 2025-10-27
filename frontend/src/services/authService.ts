@@ -21,7 +21,23 @@ class AuthService {
     password: string
   ): Promise<ApiResponse<AuthResponse>> {
     try {
+      // Enhanced debugging for mobile
+      console.log("🔐 Login attempt:", {
+        usernameOrEmail,
+        hasPassword: !!password,
+        userAgent: navigator.userAgent,
+        apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "default",
+        timestamp: new Date().toISOString(),
+      });
+
       const response = await authApi.login({ usernameOrEmail, password });
+
+      console.log("✅ Login response received:", {
+        status: response.status,
+        hasData: !!response.data,
+        hasToken: !!response.data?.token,
+        userId: response.data?.userId,
+      });
 
       // Store token and user info in localStorage
       if (response.data?.token) {
@@ -37,6 +53,7 @@ class AuthService {
             lastName: response.data.lastName,
           })
         );
+        console.log("💾 Auth data stored in localStorage");
       }
 
       return {
@@ -45,13 +62,26 @@ class AuthService {
         data: response.data,
       };
     } catch (error: any) {
-      console.error("Login error:", error);
+      // Enhanced error logging for mobile debugging
+      console.error("❌ Login error details:", {
+        error: error,
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          baseURL: error.config?.baseURL,
+        },
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         code: error.response?.status || 500,
-        msg:
-          error.response?.data?.msg ||
-          "Login failed. Please check your credentials.",
+        msg: error.response?.data?.msg || `Login failed: ${error.message}`,
       };
     }
   }
@@ -150,6 +180,18 @@ class AuthService {
     lastName?: string
   ): Promise<ApiResponse<UserInfo>> {
     try {
+      // Enhanced debugging for mobile
+      console.log("📝 Registration attempt:", {
+        username,
+        email,
+        hasPassword: !!password,
+        firstName,
+        lastName,
+        userAgent: navigator.userAgent,
+        apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "default",
+        timestamp: new Date().toISOString(),
+      });
+
       const createUserRequest: CreateUserRequest = {
         username,
         email,
@@ -160,18 +202,39 @@ class AuthService {
 
       const response = await userApi.createUser(createUserRequest);
 
+      console.log("✅ Registration response received:", {
+        status: response.status,
+        hasData: !!response.data,
+        userId: response.data?.id,
+      });
+
       return {
         code: 201,
         msg: "Registration successful",
         data: response.data,
       };
     } catch (error: any) {
-      console.error("Registration error:", error);
+      // Enhanced error logging for mobile debugging
+      console.error("❌ Registration error details:", {
+        error: error,
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          baseURL: error.config?.baseURL,
+        },
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+      });
 
       return {
         code: error.response?.status || 500,
         msg:
-          error.response?.data?.msg || "Registration failed. Please try again.",
+          error.response?.data?.msg || `Registration failed: ${error.message}`,
       };
     }
   }

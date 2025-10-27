@@ -271,16 +271,16 @@ ssh $SSH_OPTS $VPS_HOST << 'EOF'
     docker-compose -f docker-compose.prod.yml ps
     
     echo "Deployment complete!"
-    echo "Your app should be available at: http://$(curl -s ifconfig.me)"
+    echo "Your app should be available at: https://$(curl -s ifconfig.me)"
 EOF
 
 # Cleanup
 rm -rf deployment
 
 print_status "✅ Deployment completed successfully!"
-print_warning "Your Todo App is now running at: http://$VPS_IP"
-print_warning "Frontend: http://$VPS_IP"
-print_warning "API: http://$VPS_IP/api"
-print_warning "API Docs: http://$VPS_IP/api/api-docs"
+print_warning "Your Todo App is now running at: https://$VPS_IP"
+print_warning "Frontend: https://$VPS_IP"
+print_warning "API: https://$VPS_IP/api"
+print_warning "API Docs: https://$VPS_IP/api/api-docs"
 
 echo -e "${GREEN}🎉 Production deployment complete!${NC}"

@@ -3,6 +3,7 @@ import { authService } from "./services";
 import LoginForm from "./components/LoginForm";
 import RegistrationForm from "./components/RegistrationForm";
 import Dashboard from "./components/Dashboard";
+import MobileDebugPanel from "./components/MobileDebugPanel";
 import "./App.css";
 import {
   AppBar,
@@ -125,14 +126,20 @@ function App() {
         <Box
           sx={{
             flex: 1,
-            overflow: "hidden",
+            overflow: "auto",
             p: 2,
+            minHeight: 0, // Allows flex child to shrink below content size
           }}
         >
           {!isAuthenticated ? (
             <Container
               maxWidth="sm"
-              sx={{ height: "100%", display: "flex", alignItems: "center" }}
+              sx={{
+                minHeight: "100%",
+                display: "flex",
+                alignItems: "center",
+                py: 2, // Add padding for mobile
+              }}
             >
               {showRegistration ? (
                 <RegistrationForm onSwitchToLogin={handleSwitchToLogin} />
@@ -148,6 +155,9 @@ function App() {
           )}
         </Box>
       </Box>
+
+      {/* Mobile Debug Panel - only shows on mobile devices */}
+      <MobileDebugPanel />
     </ThemeProvider>
   );
 }
