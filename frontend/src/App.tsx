@@ -23,7 +23,6 @@ const theme = createTheme({
     primary: {
       main: "#90caf9",
       dark: "#1976d2",
-      darker: "#1565c0",
       contrastText: "#ffffff",
     },
     secondary: {
@@ -60,11 +59,6 @@ function App() {
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
-  };
-
-  const handleRegistrationSuccess = () => {
-    // After successful registration, switch to login form
-    setShowRegistration(false);
   };
 
   const handleSwitchToRegistration = () => {
@@ -141,10 +135,7 @@ function App() {
               sx={{ height: "100%", display: "flex", alignItems: "center" }}
             >
               {showRegistration ? (
-                <RegistrationForm
-                  onRegistrationSuccess={handleRegistrationSuccess}
-                  onSwitchToLogin={handleSwitchToLogin}
-                />
+                <RegistrationForm onSwitchToLogin={handleSwitchToLogin} />
               ) : (
                 <LoginForm
                   onLoginSuccess={handleLoginSuccess}

@@ -6,6 +6,8 @@ import {
   FileAttachmentsApi,
   type AuthResponse,
   type LoginRequest,
+  type CreateUserRequest,
+  type UserInfo,
 } from "../generated/api";
 import { envConfig } from "../config/env";
 import axios from "axios";
@@ -58,4 +60,9 @@ export const userApi = new UserManagementApi(configuration);
 export const attachmentApi = new FileAttachmentsApi(configuration);
 
 // Export the API instances and types
-export { type AuthResponse, type LoginRequest };
+export {
+  type AuthResponse,
+  type LoginRequest,
+  type CreateUserRequest,
+  type UserInfo,
+};

@@ -11,12 +11,10 @@ import {
 } from "@mui/material";
 
 interface RegistrationFormProps {
-  onRegistrationSuccess: () => void;
   onSwitchToLogin: () => void;
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
-  onRegistrationSuccess,
   onSwitchToLogin,
 }) => {
   const [formData, setFormData] = useState({

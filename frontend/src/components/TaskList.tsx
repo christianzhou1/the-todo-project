@@ -203,7 +203,7 @@ const CustomTaskTreeItem = React.forwardRef<
                   borderColor: isSelected ? "primary.main" : "transparent",
                   "&:hover": {
                     backgroundColor: isSelected
-                      ? "primary.darker"
+                      ? "primary.dark"
                       : "action.hover",
                     // Show delete button on hover
                     "& .delete-button": {

@@ -237,7 +237,7 @@ class AttachmentService {
       return {
         code: 200,
         msg: "File content retrieved successfully",
-        data: response.data as string,
+        data: response.data as unknown as string,
       };
     } catch (error: any) {
       console.error("Get file as text error:", error);

@@ -51,7 +51,7 @@ if (Test-Path ".env.production") {
 # Configuration
 $VPS_HOST = if ($env:VPS_HOST) { $env:VPS_HOST } else { "digital-ocean" }
 $APP_DIR = if ($env:APP_DIR) { $env:APP_DIR } else { "/opt/todo-app" }
-$SSL_ENABLED = if ($env:SSL_ENABLED) { $env:SSL_ENABLED } else { "false" }
+$SSL_ENABLED = if ($env:SSL_ENABLED) { $env:SSL_ENABLED } else { "true" }
 
 # Check if .env.production exists
 if (-not (Test-Path ".env.production")) {
@@ -86,22 +86,41 @@ if (Test-Path "deployment") {
 }
 New-Item -ItemType Directory -Name "deployment" | Out-Null
 
+# Check SSL prerequisites
+if ($SSL_ENABLED -eq "true") {
+    Write-Status "SSL is enabled - checking prerequisites..."
+    if (-not (Test-Path "nginx-ssl.conf")) {
+        Write-Warning "nginx-ssl.conf not found! Creating from nginx.conf..."
+        if (Test-Path "nginx.conf") {
+            Copy-Item "nginx.conf" "nginx-ssl.conf"
+            Write-Warning "Please update nginx-ssl.conf with HTTPS configuration before deploying."
+        } else {
+            Write-Error "Neither nginx.conf nor nginx-ssl.conf found!"
+            exit 1
+        }
+    }
+}
+
 Copy-Item "docker-compose.prod.yml" "deployment/"
 Copy-Item "Dockerfile.jar" "deployment/"
 
-# Copy appropriate nginx config based on SSL setting
-if ($SSL_ENABLED -eq "true") {
-    Write-Status "SSL enabled - using nginx-ssl.conf"
+# Copy SSL nginx config (HTTPS by default)
+Write-Status "Using HTTPS configuration - copying nginx-ssl.conf"
+if (Test-Path "nginx-ssl.conf") {
     Copy-Item "nginx-ssl.conf" "deployment/nginx.conf"
-    # Copy SSL certificates if they exist
-    if (Test-Path "certs") {
-        Copy-Item -Recurse "certs" "deployment/"
-    } else {
-        Write-Warning "SSL enabled but no certs directory found. Make sure SSL certificates are available on the server."
-    }
 } else {
-    Write-Status "SSL disabled - using nginx.conf (HTTP only)"
+    Write-Warning "nginx-ssl.conf not found, using nginx.conf"
     Copy-Item "nginx.conf" "deployment/"
+}
+
+# Copy SSL certificates if they exist
+if (Test-Path "certs") {
+    Write-Status "Copying SSL certificates..."
+    Copy-Item -Recurse "certs" "deployment/"
+} else {
+    Write-Warning "No certs directory found locally."
+    Write-Warning "Make sure SSL certificates are available on the server at $APP_DIR/certs/"
+    Write-Warning "You can generate them using: ./setup-letsencrypt.sh yourdomain.com your-email@example.com"
 }
 
 Copy-Item ".env.production" "deployment/"
@@ -244,6 +263,14 @@ docker image prune -f || true
 # Fix file permissions for frontend
 chmod -R 755 frontend/dist/
 
+# Fix SSL certificate permissions if they exist
+if [ -d "certs" ]; then
+    echo "Setting SSL certificate permissions..."
+    chmod 644 certs/server.crt
+    chmod 600 certs/server.key
+    chown root:root certs/server.crt certs/server.key
+fi
+
 # Build and start the application with clean build
 docker-compose -f docker-compose.prod.yml --env-file .env.production build --no-cache
 docker-compose -f docker-compose.prod.yml --env-file .env.production up -d
@@ -256,7 +283,7 @@ sleep 10
 docker-compose -f docker-compose.prod.yml ps
 
 echo "Deployment complete!"
-echo "Your app should be available at: http://$(curl -s ifconfig.me)"
+echo "Your app should be available at: https://$(curl -s ifconfig.me)"
 '@
 
 # Execute deployment script on VPS
@@ -269,9 +296,9 @@ Invoke-Expression $fullSshCmd
 Remove-Item -Recurse -Force "deployment"
 
 Write-Status "✅ Deployment completed successfully!"
-Write-Warning "Your Todo App is now running at: http://$($env:VPS_IP)"
-Write-Warning "Frontend: http://$($env:VPS_IP)"
-Write-Warning "API: http://$($env:VPS_IP)/api"
-Write-Warning "API Docs: http://$($env:VPS_IP)/api/api-docs"
+Write-Warning "Your Todo App is now running at: https://$($env:VPS_IP)"
+Write-Warning "Frontend: https://$($env:VPS_IP)"
+Write-Warning "API: https://$($env:VPS_IP)/api"
+Write-Warning "API Docs: https://$($env:VPS_IP)/api/api-docs"
 
 Write-Host "🎉 Production deployment complete!" -ForegroundColor Green
