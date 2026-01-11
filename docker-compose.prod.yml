@@ -81,8 +81,10 @@ services:
     depends_on:
       skysync-db:
         condition: service_healthy
-    ports:
-      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    # Backend port - only expose if needed for direct access
+    # Nginx will proxy requests, so this is optional
+    # ports:
+    #   - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
     networks:
       - skysync-net
     restart: unless-stopped
