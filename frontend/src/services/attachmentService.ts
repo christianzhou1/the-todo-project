@@ -1,6 +1,6 @@
 import { attachmentApi } from "./generatedApi";
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   msg: string;
   data?: T;
@@ -10,7 +10,7 @@ class AttachmentService {
   /**
    * Upload file without linking to task
    */
-  async uploadFile(file: File, userId: string): Promise<ApiResponse<any>> {
+  async uploadFile(file: File, userId: string): Promise<ApiResponse<unknown>> {
     // Enhanced mobile debugging
     const isMobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -59,35 +59,44 @@ class AttachmentService {
         msg: "File uploaded successfully",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isMobile) {
         console.error("📱 AttachmentService Debug - Upload error:", error);
-        console.error("📱 AttachmentService Debug - Error details:", {
-          name: error.name,
-          message: error.message,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers,
-          },
-        });
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number; statusText?: string; data?: unknown }; config?: { url?: string; method?: string; headers?: unknown } };
+          console.error("📱 AttachmentService Debug - Error details:", {
+            name: 'name' in error ? error.name : undefined,
+            message: 'message' in error ? error.message : undefined,
+            status: axiosError.response?.status,
+            statusText: axiosError.response?.statusText,
+            data: axiosError.response?.data,
+            config: {
+              url: axiosError.config?.url,
+              method: axiosError.config?.method,
+              headers: axiosError.config?.headers,
+            },
+          });
+        }
       }
       console.error("Upload file error:", error);
 
       // Enhanced error message handling
       let errorMessage = "Failed to upload file.";
-      let errorCode = error.response?.status || 500;
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: unknown } } 
+        : null;
+      const errorCode = axiosError?.response?.status || 500;
 
-      if (error.response?.data) {
-        if (typeof error.response.data === "string") {
-          errorMessage = error.response.data;
-        } else if (error.response.data.msg) {
-          errorMessage = error.response.data.msg;
-        } else if (error.response.data.message) {
-          errorMessage = error.response.data.message;
+      if (axiosError?.response?.data) {
+        const errorData = axiosError.response.data;
+        if (typeof errorData === "string") {
+          errorMessage = errorData;
+        } else if (errorData && typeof errorData === 'object') {
+          if ('msg' in errorData && typeof errorData.msg === 'string') {
+            errorMessage = errorData.msg;
+          } else if ('message' in errorData && typeof errorData.message === 'string') {
+            errorMessage = errorData.message;
+          }
         }
       }
 
@@ -110,7 +119,7 @@ class AttachmentService {
     taskId: string,
     file: File,
     userId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const response = await attachmentApi.uploadForTask(taskId, userId, file);
       return {
@@ -118,12 +127,15 @@ class AttachmentService {
         msg: "File uploaded and attached successfully",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Upload file for task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to upload file for task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to upload file for task.",
       };
     }
   }
@@ -134,7 +146,7 @@ class AttachmentService {
   async getTaskAttachments(
     taskId: string,
     userId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const response = await attachmentApi.listForTask(taskId, userId);
       return {
@@ -142,17 +154,20 @@ class AttachmentService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get task attachments error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get task attachments.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get task attachments.",
       };
     }
   }
 
-  async getUserAttachments(userId: string): Promise<ApiResponse<any>> {
+  async getUserAttachments(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await attachmentApi.listForUser(userId);
       return {
@@ -160,12 +175,15 @@ class AttachmentService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get user attachments error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get user attachments.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get user attachments.",
       };
     }
   }
@@ -177,7 +195,7 @@ class AttachmentService {
     attachmentId: string,
     taskId: string,
     userId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const response = await attachmentApi.attach(attachmentId, taskId, userId);
       return {
@@ -185,12 +203,15 @@ class AttachmentService {
         msg: "File attached successfully",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Attach file to task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to attach file to task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to attach file to task.",
       };
     }
   }
@@ -201,7 +222,7 @@ class AttachmentService {
   async detachFileFromTask(
     attachmentId: string,
     userId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const response = await attachmentApi.detach(attachmentId, userId);
       return {
@@ -209,12 +230,15 @@ class AttachmentService {
         msg: "File detached successfully",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Detach file from task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to detach file from task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to detach file from task.",
       };
     }
   }
@@ -235,12 +259,15 @@ class AttachmentService {
         msg: "File downloaded successfully",
         data: response.data as unknown as Blob,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Download file error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to download file.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to download file.",
       };
     }
   }
@@ -285,27 +312,33 @@ class AttachmentService {
         code: 200,
         msg: "Attachment deleted successfully",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (isMobile) {
         console.error("📱 AttachmentService Debug - Delete error:", error);
-        console.error("📱 AttachmentService Debug - Error details:", {
-          name: error.name,
-          message: error.message,
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          config: {
-            url: error.config?.url,
-            method: error.config?.method,
-            headers: error.config?.headers,
-          },
-        });
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as { response?: { status?: number; statusText?: string; data?: unknown }; config?: { url?: string; method?: string; headers?: unknown } };
+          console.error("📱 AttachmentService Debug - Error details:", {
+            name: 'name' in error ? error.name : undefined,
+            message: 'message' in error ? error.message : undefined,
+            status: axiosError.response?.status,
+            statusText: axiosError.response?.statusText,
+            data: axiosError.response?.data,
+            config: {
+              url: axiosError.config?.url,
+              method: axiosError.config?.method,
+              headers: axiosError.config?.headers,
+            },
+          });
+        }
       }
       console.error("Delete attachment error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to delete attachment.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to delete attachment.",
       };
     }
   }
@@ -356,12 +389,15 @@ class AttachmentService {
         msg: "File content retrieved successfully",
         data: response.data as unknown as string,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get file as text error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get file content.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get file content.",
       };
     }
   }

@@ -95,7 +95,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       } else {
         setError(response.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Registration failed. Please try again.");
     } finally {
       setLoading(false);

@@ -2,7 +2,7 @@ import { taskApi } from "./generatedApi";
 import axios from "axios";
 import { envConfig } from "../config/env";
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   msg: string;
   data?: T;
@@ -17,7 +17,7 @@ class TaskService {
     page: number = 0,
     size: number = 10,
     sort: string = "createdAt,desc"
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.listTasks(userId, page, size, sort);
       return {
@@ -25,12 +25,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get task page error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get task list.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get task list.",
       };
     }
   }
@@ -38,7 +41,7 @@ class TaskService {
   /**
    * Get task detail by ID
    */
-  async getTaskDetail(id: string, userId: string): Promise<ApiResponse<any>> {
+  async getTaskDetail(id: string, userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.getTaskDetail(id, userId);
       return {
@@ -46,12 +49,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get task detail error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get task detail.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get task detail.",
       };
     }
   }
@@ -59,7 +65,7 @@ class TaskService {
   /**
    * List tasks (non deleted)
    */
-  async listTasks(userId: string): Promise<ApiResponse<any>> {
+  async listTasks(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.listTasks(userId);
       return {
@@ -67,12 +73,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("List tasks error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to list tasks.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to list tasks.",
       };
     }
   }
@@ -85,9 +94,9 @@ class TaskService {
     description: string,
     userId: string,
     parentTaskId?: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
-      const requestData: any = { title, description };
+      const requestData: { title: string; description: string; parentTaskId?: string } = { title, description };
       if (parentTaskId) {
         requestData.parentTaskId = parentTaskId;
       }
@@ -98,12 +107,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Create task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to create task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to create task.",
       };
     }
   }
@@ -117,9 +129,9 @@ class TaskService {
     description?: string,
     isCompleted?: boolean,
     userId?: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
-      const updateData: any = {};
+      const updateData: { title?: string; description?: string; isCompleted?: boolean } = {};
       if (title !== undefined) updateData.title = title;
       if (description !== undefined) updateData.description = description;
       if (isCompleted !== undefined) updateData.isCompleted = isCompleted;
@@ -130,12 +142,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Update task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to update task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to update task.",
       };
     }
   }
@@ -147,7 +162,7 @@ class TaskService {
     id: string,
     completed: boolean,
     userId: string
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<unknown>> {
     try {
       const updateData = { isCompleted: completed };
       const response = await taskApi.updateTask(id, userId, updateData);
@@ -156,13 +171,16 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Set task completed error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
+        code: axiosError?.response?.status || 500,
         msg:
-          error.response?.data?.msg ||
+          axiosError?.response?.data?.msg ||
           "Failed to update task completion status.",
       };
     }
@@ -171,19 +189,22 @@ class TaskService {
   /**
    * Delete task
    */
-  async deleteTask(id: string, userId: string): Promise<ApiResponse<any>> {
+  async deleteTask(id: string, userId: string): Promise<ApiResponse<unknown>> {
     try {
       await taskApi.deleteTask(id, userId);
       return {
         code: 200,
         msg: "Task deleted successfully",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Delete task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to delete task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to delete task.",
       };
     }
   }
@@ -191,7 +212,7 @@ class TaskService {
   /**
    * Get all tasks for user
    */
-  async getAllTasks(userId: string): Promise<ApiResponse<any>> {
+  async getAllTasks(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.listAllTasks(userId);
       return {
@@ -199,12 +220,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get all tasks error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get all tasks.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get all tasks.",
       };
     }
   }
@@ -212,7 +236,7 @@ class TaskService {
   /**
    * Get all task details for user
    */
-  async getAllTaskDetails(userId: string): Promise<ApiResponse<any>> {
+  async getAllTaskDetails(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.listAllTaskDetails(userId);
       return {
@@ -220,12 +244,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get all task details error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get task details.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get task details.",
       };
     }
   }
@@ -233,7 +260,7 @@ class TaskService {
   /**
    * Create mock task
    */
-  async createMockTask(userId: string): Promise<ApiResponse<any>> {
+  async createMockTask(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.insertMock(userId);
       return {
@@ -241,12 +268,15 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Create mock task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to create mock task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to create mock task.",
       };
     }
   }
@@ -254,7 +284,7 @@ class TaskService {
   /**
    * Get root tasks
    */
-  async getRootTasks(userId: string): Promise<ApiResponse<any>> {
+  async getRootTasks(userId: string): Promise<ApiResponse<unknown>> {
     try {
       const response = await taskApi.getRootTasks(userId);
       return {
@@ -262,11 +292,14 @@ class TaskService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get root tasks error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get root tasks.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get root tasks.",
       };
     }
   }
@@ -288,11 +321,14 @@ class TaskService {
         code: response.status,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Reorder task error:", error);
+      const axiosError = error && typeof error === 'object' && 'response' in error 
+        ? error as { response?: { status?: number; data?: { msg?: string } } } 
+        : null;
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to reorder task.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to reorder task.",
       };
     }
   }

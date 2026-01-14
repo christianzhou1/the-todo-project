@@ -217,7 +217,7 @@ const AttachmentList: React.FC<AttachmentListProps> = ({
       if (!success) {
         setError("Failed to download file");
       }
-    } catch (error) {
+    } catch {
       setError("Failed to download file");
     }
   };

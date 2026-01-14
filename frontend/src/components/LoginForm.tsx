@@ -50,7 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       } else {
         setError(response.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Login failed. Please try again.");
     } finally {
       setLoading(false);

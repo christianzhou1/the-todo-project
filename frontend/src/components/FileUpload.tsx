@@ -3,7 +3,7 @@ import { attachmentService, authService } from "../services";
 
 interface FileUploadProps {
   taskId?: string;
-  onUploadSuccess?: (attachment: any) => void;
+  onUploadSuccess?: (attachment: unknown) => void;
 }
 
 const FileUpload: React.FC<FileUploadProps> = ({ taskId, onUploadSuccess }) => {
@@ -58,7 +58,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ taskId, onUploadSuccess }) => {
       } else {
         setError(response.msg);
       }
-    } catch (err) {
+    } catch {
       setError("Upload failed. Please try again.");
     } finally {
       setUploading(false);

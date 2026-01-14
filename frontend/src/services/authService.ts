@@ -6,7 +6,7 @@ import {
   type UserInfo,
 } from "./generatedApi";
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   msg: string;
   data?: T;
@@ -61,27 +61,51 @@ class AuthService {
         msg: "Login successful",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Enhanced error logging for mobile debugging
+      const axiosError =
+        error && typeof error === "object" && "response" in error
+          ? (error as {
+              response?: {
+                status?: number;
+                statusText?: string;
+                data?: { msg?: string };
+              };
+              config?: {
+                url?: string;
+                method?: string;
+                headers?: unknown;
+                baseURL?: string;
+              };
+            })
+          : null;
+      const errorMessage =
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "Unknown error";
+
       console.error("❌ Login error details:", {
         error: error,
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
+        message: errorMessage,
+        status: axiosError?.response?.status,
+        statusText: axiosError?.response?.statusText,
+        data: axiosError?.response?.data,
         config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-          baseURL: error.config?.baseURL,
+          url: axiosError?.config?.url,
+          method: axiosError?.config?.method,
+          headers: axiosError?.config?.headers,
+          baseURL: axiosError?.config?.baseURL,
         },
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString(),
       });
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || `Login failed: ${error.message}`,
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || `Login failed: ${errorMessage}`,
       };
     }
   }
@@ -97,12 +121,18 @@ class AuthService {
         msg: "Success",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Get current user error:", error);
+      const axiosError =
+        error && typeof error === "object" && "response" in error
+          ? (error as {
+              response?: { status?: number; data?: { msg?: string } };
+            })
+          : null;
 
       return {
-        code: error.response?.status || 500,
-        msg: error.response?.data?.msg || "Failed to get current user.",
+        code: axiosError?.response?.status || 500,
+        msg: axiosError?.response?.data?.msg || "Failed to get current user.",
       };
     }
   }
@@ -123,7 +153,7 @@ class AuthService {
         code: 200,
         msg: "Logout successful",
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Logout error:", error);
 
       // Clear stored data even if API call fails
@@ -150,7 +180,7 @@ class AuthService {
   /**
    * Get stored user information
    */
-  getStoredUserInfo(): any {
+  getStoredUserInfo(): unknown {
     const userInfo = localStorage.getItem("userInfo");
     return userInfo ? JSON.parse(userInfo) : null;
   }
@@ -213,28 +243,53 @@ class AuthService {
         msg: "Registration successful",
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Enhanced error logging for mobile debugging
+      const axiosError =
+        error && typeof error === "object" && "response" in error
+          ? (error as {
+              response?: {
+                status?: number;
+                statusText?: string;
+                data?: { msg?: string };
+              };
+              config?: {
+                url?: string;
+                method?: string;
+                headers?: unknown;
+                baseURL?: string;
+              };
+            })
+          : null;
+      const errorMessage =
+        error &&
+        typeof error === "object" &&
+        "message" in error &&
+        typeof error.message === "string"
+          ? error.message
+          : "Unknown error";
+
       console.error("❌ Registration error details:", {
         error: error,
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
+        message: errorMessage,
+        status: axiosError?.response?.status,
+        statusText: axiosError?.response?.statusText,
+        data: axiosError?.response?.data,
         config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-          baseURL: error.config?.baseURL,
+          url: axiosError?.config?.url,
+          method: axiosError?.config?.method,
+          headers: axiosError?.config?.headers,
+          baseURL: axiosError?.config?.baseURL,
         },
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString(),
       });
 
       return {
-        code: error.response?.status || 500,
+        code: axiosError?.response?.status || 500,
         msg:
-          error.response?.data?.msg || `Registration failed: ${error.message}`,
+          axiosError?.response?.data?.msg ||
+          `Registration failed: ${errorMessage}`,
       };
     }
   }
