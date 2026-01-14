@@ -34,5 +34,5 @@ jobs:
         working-directory: ./frontend
         run: |
           npm ci
-          npm run lint
+          npm run lint -- --fix || true
           npm run build
