@@ -516,8 +516,8 @@ const TaskList: React.FC<TaskListProps> = ({
 
       const response = await taskService.listTasks(userId);
 
-      if (response.code === 200 && response.data) {
-        setTasks(response.data);
+      if (response.code === 200 && response.data && Array.isArray(response.data)) {
+        setTasks(response.data as Task[]);
       } else {
         setError(response.msg);
       }
@@ -599,12 +599,13 @@ const TaskList: React.FC<TaskListProps> = ({
 
       if (response.code === 200 && response.data) {
         //add new task to existing task array
+        const newTask = response.data as Task;
         setTasks((prevTasks) => {
-          const newTasks = [response.data, ...prevTasks];
+          const newTasks = [newTask, ...prevTasks];
 
           // If this is a subtask, increment parent's subtask count
           if (parentTaskId) {
-            return newTasks.map((task) =>
+            return newTasks.map((task: Task) =>
               task.id === parentTaskId
                 ? { ...task, subtaskCount: (task.subtaskCount || 0) + 1 }
                 : task

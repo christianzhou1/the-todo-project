@@ -84,8 +84,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ selectedTask }) => {
         userId
       );
 
-      if (response.code === 200 && response.data) {
-        setAttachments(response.data);
+      if (response.code === 200 && response.data && Array.isArray(response.data)) {
+        setAttachments(response.data as AttachmentInfo[]);
       } else {
         setAttachmentsError(response.msg);
       }

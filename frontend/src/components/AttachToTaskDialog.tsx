@@ -58,9 +58,13 @@ const AttachToTaskDialog: React.FC<AttachToTaskDialogProps> = ({
 
       const response = await attachmentService.getUserAttachments(userId);
 
-      if (response.code === 200 && response.data) {
+      if (
+        response.code === 200 &&
+        response.data &&
+        Array.isArray(response.data)
+      ) {
         // Filter out attachments that are already linked to this task
-        const unlinkedAttachments = response.data.filter(
+        const unlinkedAttachments = (response.data as AttachmentInfo[]).filter(
           (attachment: AttachmentInfo) =>
             !attachment.taskId || attachment.taskId !== taskId
         );
