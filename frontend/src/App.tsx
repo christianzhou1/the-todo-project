@@ -4,6 +4,7 @@ import LoginForm from "./components/LoginForm";
 import RegistrationForm from "./components/RegistrationForm";
 import Dashboard from "./components/Dashboard";
 import MobileDebugPanel from "./components/MobileDebugPanel";
+import Footer from "./components/Footer";
 import "./App.css";
 import {
   AppBar,
@@ -154,6 +155,7 @@ function App() {
             <Dashboard />
           )}
         </Box>
+        <Footer />
       </Box>
 
       {/* Mobile Debug Panel - only shows on mobile devices */}
