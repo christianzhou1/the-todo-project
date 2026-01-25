@@ -26,7 +26,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || (process.env.CI ? "http://localhost:4173" : "http://localhost:5173"),
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
     /* Screenshot on failure */
@@ -42,7 +42,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         // Use mocked backend via MSW
-        baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173",
+        baseURL: process.env.PLAYWRIGHT_BASE_URL || (process.env.CI ? "http://localhost:4173" : "http://localhost:5173"),
       },
     },
     {
@@ -50,7 +50,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         // Use real backend (requires backend + DB running)
-        baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:5173",
+        baseURL: process.env.PLAYWRIGHT_BASE_URL || (process.env.CI ? "http://localhost:4173" : "http://localhost:5173"),
       },
     },
 
@@ -66,13 +66,24 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    stdout: "ignore",
-    stderr: "pipe",
-  },
+  webServer: process.env.CI
+    ? {
+        // In CI: build and serve production build (best practice)
+        command: "npm run build:ci && npm run preview:ci",
+        url: "http://localhost:4173",
+        reuseExistingServer: false,
+        timeout: 120 * 1000,
+        stdout: "ignore",
+        stderr: "pipe",
+      }
+    : {
+        // Local: use dev server for faster iteration
+        command: "npm run dev",
+        url: "http://localhost:5173",
+        reuseExistingServer: true,
+        timeout: 120 * 1000,
+        stdout: "ignore",
+        stderr: "pipe",
+      },
 });
 
