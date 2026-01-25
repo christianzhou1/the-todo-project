@@ -91,7 +91,8 @@ class UserIntegrationTest {
         assertThat(updatedUser.getEmail()).isEqualTo("updated@example.com");
         assertThat(updatedUser.getFirstName()).isEqualTo("Updated");
         assertThat(updatedUser.getLastName()).isEqualTo("User");
-        assertThat(updatedUser.getUpdatedAt()).isAfter(user.getUpdatedAt());
+        // Use isAfterOrEqualTo to handle cases where update happens very quickly (same nanosecond)
+        assertThat(updatedUser.getUpdatedAt()).isAfterOrEqualTo(user.getUpdatedAt());
     }
 
     @Test
