@@ -120,6 +120,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       <Box
         component="form"
         onSubmit={handleSubmit}
+        noValidate
         sx={{ display: "flex", flexDirection: "column", gap: 2 }}
       >
         <TextField

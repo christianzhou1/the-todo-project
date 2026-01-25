@@ -1,7 +1,13 @@
 import "@testing-library/jest-dom";
 import { cleanup } from "@testing-library/react";
-import { afterEach, beforeAll, afterAll } from "vitest";
+import { afterEach, beforeAll, afterAll, vi } from "vitest";
 import { server } from "./mocks/server";
+
+// Mock Material-UI icons to prevent EMFILE errors on Windows
+// This avoids opening hundreds of icon files during test execution
+vi.mock("@mui/icons-material", () => {
+  return import("./mocks/icons");
+});
 
 // Establish API mocking before all tests
 beforeAll(() => {

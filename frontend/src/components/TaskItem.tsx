@@ -66,10 +66,17 @@ const TaskItem: React.FC<TaskItemProps> = ({
             <IconButton
               onClick={() => onToggleCompletion(task.id, task.completed)}
               color={task.completed ? "warning" : "success"}
+              title={task.completed ? "Mark as incomplete" : "Mark as complete"}
+              aria-label={task.completed ? "Mark as incomplete" : "Mark as complete"}
             >
               {task.completed ? <RadioButtonUnchecked /> : <CheckCircle />}
             </IconButton>
-            <IconButton onClick={() => onDelete(task.id)} color="error">
+            <IconButton 
+              onClick={() => onDelete(task.id)} 
+              color="error"
+              title="Delete"
+              aria-label="Delete"
+            >
               <Delete />
             </IconButton>
           </Box>

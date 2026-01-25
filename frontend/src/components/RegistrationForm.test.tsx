@@ -114,7 +114,8 @@ describe("RegistrationForm", () => {
 
     await waitFor(() => {
       // The error message is displayed in an Alert component
-      expect(screen.getByText(/valid email address/i)).toBeInTheDocument();
+      // The exact message is "Please enter a valid email address"
+      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
     }, { timeout: 3000 });
 
     expect(authService.register).not.toHaveBeenCalled();

@@ -22,5 +22,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
     css: true,
+    // Optimize dependencies to reduce file handles
+    deps: {
+      inline: ["@mui/icons-material"],
+    },
   },
 });

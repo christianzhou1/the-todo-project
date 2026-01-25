@@ -68,7 +68,7 @@ describe("TaskItem", () => {
       />
     );
 
-    const completionButton = screen.getAllByRole("button")[0]; // First button is completion
+    const completionButton = screen.getByRole("button", { name: /mark as complete/i });
     await user.click(completionButton);
 
     expect(mockOnToggleCompletion).toHaveBeenCalledWith("task-1", false);
