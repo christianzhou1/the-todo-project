@@ -3,6 +3,7 @@ package com.todo.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todo.api.dto.AuthResponse;
 import com.todo.service.AuthService;
+import com.todo.util.JwtUtil;
 import com.todo.util.TestDataFactory;
 import com.todo.web.dto.LoginRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,9 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     private UUID userId;
     private AuthResponse authResponse;

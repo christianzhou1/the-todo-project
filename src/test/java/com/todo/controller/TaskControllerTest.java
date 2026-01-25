@@ -6,6 +6,7 @@ import com.todo.entity.Task;
 import com.todo.entity.User;
 import com.todo.service.TaskService;
 import com.todo.service.UserService;
+import com.todo.util.JwtUtil;
 import com.todo.util.TestDataFactory;
 import com.todo.web.dto.CreateTaskRequest;
 import com.todo.web.dto.UpdateTaskRequest;
@@ -41,6 +42,9 @@ class TaskControllerTest {
 
     @MockBean
     private UserService userService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     private User testUser;
     private UUID userId;
