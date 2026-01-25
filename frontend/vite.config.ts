@@ -22,6 +22,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
     css: true,
+    // Exclude E2E tests (they're run by Playwright, not Vitest)
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**", "**/*.e2e.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
     // Optimize dependencies to reduce file handles
     deps: {
       inline: ["@mui/icons-material"],
