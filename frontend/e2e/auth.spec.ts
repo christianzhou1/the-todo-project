@@ -4,11 +4,18 @@ import { AuthHelpers } from "./helpers/auth-helpers";
 import { clearStorage, waitForAppReady } from "./helpers/test-utils";
 
 test.describe("Authentication", () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page, context }) => {
+    // Clear cookies and storage at context level (works before navigation)
+    await context.clearCookies();
+    
     // Setup mocked backend for all auth tests
     await setupMockedBackend(page);
-    await clearStorage(page);
+    
+    // Navigate to the page first
     await page.goto("/");
+    
+    // Now clear storage (page is loaded)
+    await clearStorage(page);
     await waitForAppReady(page);
   });
 

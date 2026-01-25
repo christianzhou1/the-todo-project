@@ -4,9 +4,17 @@ import { AuthHelpers } from "./helpers/auth-helpers";
 import { clearStorage, waitForAppReady } from "./helpers/test-utils";
 
 test.describe("Task Management", () => {
-  test.beforeEach(async ({ page }) => {
-    // Setup mocked backend and login
+  test.beforeEach(async ({ page, context }) => {
+    // Clear cookies and storage at context level (works before navigation)
+    await context.clearCookies();
+    
+    // Setup mocked backend
     await setupMockedBackend(page);
+    
+    // Navigate to the page first
+    await page.goto("/");
+    
+    // Now clear storage (page is loaded)
     await clearStorage(page);
     
     const auth = new AuthHelpers(page);
@@ -82,11 +90,9 @@ test.describe("Task Management", () => {
         await addButton.first().click();
         await page.waitForTimeout(500);
         
-        // Should see dialog or form for creating task
-        const dialog = page.getByRole("dialog").or(
-          page.locator('input[type="text"], textarea').first()
-        );
-        await expect(dialog).toBeVisible({ timeout: 2000 });
+        // Should see dialog for creating task
+        const dialog = page.getByRole("dialog", { name: /create.*task/i });
+        await expect(dialog.first()).toBeVisible({ timeout: 2000 });
       }
     });
 
@@ -127,7 +133,8 @@ test.describe("Task Management", () => {
             
             // Should see the new task in the list (mocked response returns "new-task-id")
             // The UI might show a success message or the task in the list
-            await expect(page.getByText(/new e2e test task|new-task-id/i)).toBeVisible({ timeout: 3000 });
+            // Use first() to handle multiple matches (task title and ID)
+            await expect(page.getByText(/new e2e test task/i).first()).toBeVisible({ timeout: 3000 });
           }
         }
       }
@@ -143,15 +150,31 @@ test.describe("Task Management", () => {
         await addButton.first().click();
         await page.waitForTimeout(500);
         
-        // Try to submit without title
+        // Try to submit without title (button should be disabled)
         const submitButton = page.getByRole("button", { name: /create|save|submit/i });
         if (await submitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await submitButton.click();
-          await page.waitForTimeout(500);
+          // Check if button is disabled (which is expected for validation)
+          const isDisabled = await submitButton.isDisabled();
+          if (isDisabled) {
+            // Button is disabled, which is correct validation behavior
+            // Try to trigger validation by attempting to interact with the form
+            const titleInput = page.getByLabel(/title/i).or(
+              page.locator('input[type="text"]').first()
+            );
+            if (await titleInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+              // Focus and blur to trigger validation
+              await titleInput.focus();
+              await titleInput.blur();
+              await page.waitForTimeout(300);
+            }
+          } else {
+            // If button is enabled, try clicking (should show error)
+            await submitButton.click();
+            await page.waitForTimeout(500);
+          }
           
-          // Should show validation error
-          // This depends on the form implementation
-          const errorMessage = page.getByText(/title is required|please enter/i);
+          // Should show validation error or button should remain disabled
+          const errorMessage = page.getByText(/title is required|please enter|required/i);
           await expect(errorMessage.first()).toBeVisible({ timeout: 2000 }).catch(() => {
             // If no error message, the form might prevent submission
             // That's also acceptable

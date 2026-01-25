@@ -12,12 +12,27 @@ export async function waitForAppReady(page: Page) {
 
 /**
  * Clear all browser storage (localStorage, sessionStorage)
+ * This should be called after page.goto() to ensure the page context exists.
+ * For context-level clearing before navigation, use context.clearCookies().
  */
 export async function clearStorage(page: Page) {
-  await page.evaluate(() => {
-    localStorage.clear();
-    sessionStorage.clear();
-  });
+  // Wait for page to be ready if not already
+  try {
+    await page.waitForLoadState("domcontentloaded", { timeout: 1000 });
+  } catch {
+    // Page might not be loaded yet, that's okay
+  }
+  
+  // Clear storage (will fail silently if page context doesn't exist)
+  try {
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    });
+  } catch (error) {
+    // If page context doesn't exist yet, that's okay
+    // The storage will be cleared after navigation
+  }
 }
 
 /**
