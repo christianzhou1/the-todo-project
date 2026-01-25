@@ -143,38 +143,89 @@ class AuthService {
   async logout(): Promise<ApiResponse> {
     try {
       await authApi.logout();
-
-      // Clear stored authentication data
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("userInfo");
-
-      return {
-        code: 200,
-        msg: "Logout successful",
-      };
     } catch (error: unknown) {
       console.error("Logout error:", error);
-
-      // Clear stored data even if API call fails
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userId");
-      localStorage.removeItem("userInfo");
-
-      return {
-        code: 200,
-        msg: "Logout successful",
-      };
+    } finally {
+      // Always clear stored data, even if API call fails
+      this.clearAuthData();
     }
+
+    return {
+      code: 200,
+      msg: "Logout successful",
+    };
   }
 
   /**
    * Check if user is authenticated
+   * Validates that token and userId exist and are not empty
+   * Also checks JWT token expiration if the token is a JWT
    */
   isAuthenticated(): boolean {
-    const token = localStorage.getItem("authToken");
-    const userId = localStorage.getItem("userId");
-    return !!(token && userId);
+    try {
+      const token = localStorage.getItem("authToken");
+      const userId = localStorage.getItem("userId");
+      
+      // Check that both exist and are not empty strings
+      if (!token || !userId || token.trim() === "" || userId.trim() === "") {
+        // Clear invalid auth data
+        if (token || userId) {
+          this.clearAuthData();
+        }
+        return false;
+      }
+      
+      // Validate JWT token expiration if it's a JWT
+      try {
+        const tokenParts = token.split(".");
+        if (tokenParts.length === 3) {
+          // It's a JWT, check expiration
+          try {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            if (payload.exp) {
+              const expirationTime = payload.exp * 1000; // Convert to milliseconds
+              if (Date.now() >= expirationTime) {
+                // Token expired, clear auth data
+                this.clearAuthData();
+                return false;
+              }
+            }
+          } catch (parseError) {
+            // If we can't parse the JWT payload, it's invalid
+            console.warn("Invalid JWT payload, clearing auth data", parseError);
+            this.clearAuthData();
+            return false;
+          }
+        }
+        // If it's not a JWT (doesn't have 3 parts), we'll still accept it
+        // as valid if token and userId are present
+      } catch (error) {
+        // If token parsing fails but it's not a JWT, that's okay
+        // Only clear if it looks like a JWT but is malformed
+        if (token.includes(".")) {
+          console.warn("Invalid JWT token format, clearing auth data", error);
+          this.clearAuthData();
+          return false;
+        }
+        // Non-JWT tokens are fine, just check presence
+      }
+      
+      return true;
+    } catch (error) {
+      // If anything goes wrong, assume not authenticated and clear data
+      console.error("Error checking authentication status", error);
+      this.clearAuthData();
+      return false;
+    }
+  }
+
+  /**
+   * Clear authentication data from localStorage
+   */
+  private clearAuthData(): void {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userInfo");
   }
 
   /**

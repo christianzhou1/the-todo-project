@@ -51,9 +51,15 @@ function App() {
   useEffect(() => {
     // Check if user is already authenticated
     const checkAuth = () => {
-      const authenticated = authService.isAuthenticated();
-      setIsAuthenticated(authenticated);
-      setLoading(false);
+      try {
+        const authenticated = authService.isAuthenticated();
+        setIsAuthenticated(authenticated);
+      } catch (error) {
+        console.error("Error checking authentication", error);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();
