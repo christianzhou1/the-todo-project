@@ -98,8 +98,17 @@ jobs:
 
       - name: Upload files
         run: |
-          scp -o StrictHostKeyChecking=no deployment/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
-          scp -o StrictHostKeyChecking=no -r deployment/frontend ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
+          # Upload files individually (scp without -r fails on directories)
+          for file in deployment/*.yml deployment/*.jar deployment/.env.production deployment/nginx.conf deployment/Dockerfile.jar; do
+            if [ -f "$file" ]; then
+              scp -o StrictHostKeyChecking=no "$file" ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
+            fi
+          done
+          # Upload frontend directory recursively
+          if [ -d "deployment/frontend" ]; then
+            scp -o StrictHostKeyChecking=no -r deployment/frontend ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
+          fi
+          # Upload deploy script
           scp -o StrictHostKeyChecking=no deploy-remote.sh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/deploy-remote.sh
 
       - name: Deploy
