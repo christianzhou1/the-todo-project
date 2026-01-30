@@ -1,5 +1,7 @@
-import React, { ReactElement } from "react";
-import { render, RenderOptions, screen, waitFor } from "@testing-library/react";
+import React from "react";
+import type { ReactElement } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
+import type { RenderOptions } from "@testing-library/react";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 
 const theme = createTheme({

@@ -1,5 +1,3 @@
-import React from "react";
-
 // Mock component for Material-UI icons
 // This prevents EMFILE errors on Windows by avoiding opening hundreds of icon files
 const MockIcon = ({ children, "data-testid": testId, ...props }: any) => (
@@ -12,7 +10,7 @@ const MockIcon = ({ children, "data-testid": testId, ...props }: any) => (
 // This ensures all icon imports work without needing to list every single one
 const createIconProxy = () => {
   return new Proxy({} as Record<string, typeof MockIcon>, {
-    get: (_target, prop: string) => {
+    get: (_target, _prop: string) => {
       // Return MockIcon for any property access
       return MockIcon;
     },

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "../test/utils/test-utils";
-import userEvent from "@testing-library/user-event";
 import TaskList from "./TaskList";
 import { taskService, authService } from "../services";
 

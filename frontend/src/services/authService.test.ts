@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { authService } from "./authService";
 
 describe("AuthService", () => {
@@ -70,7 +70,7 @@ describe("AuthService", () => {
       localStorage.setItem("userId", "test-user-id");
 
       // Mock a scenario where API fails but we still clear local data
-      const response = await authService.logout();
+      await authService.logout();
 
       // Should still clear local data
       expect(localStorage.getItem("authToken")).toBeNull();

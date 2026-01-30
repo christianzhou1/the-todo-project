@@ -14,6 +14,37 @@ docker rm skysync-backend skysync-db skysync-nginx 2>/dev/null || true
 # Also stop via docker compose if it exists
 docker compose -f docker-compose.prod.yml --env-file .env.production down -v 2>/dev/null || true
 
+# Check if PostgreSQL is running on host and stop it (port 5432 conflict)
+echo "Checking for host PostgreSQL service..."
+if systemctl is-active --quiet postgresql 2>/dev/null; then
+    echo "WARNING: PostgreSQL service is running on host. Stopping it to avoid port conflict..."
+    systemctl stop postgresql 2>/dev/null || true
+    systemctl disable postgresql 2>/dev/null || true
+    echo "Host PostgreSQL stopped"
+elif pgrep -x postgres >/dev/null 2>&1; then
+    echo "WARNING: PostgreSQL process found. Killing it to avoid port conflict..."
+    pkill -9 postgres 2>/dev/null || true
+    sleep 2
+fi
+
+# Check if port 5432 is still in use
+if command -v lsof >/dev/null 2>&1; then
+    if lsof -i :5432 >/dev/null 2>&1; then
+        echo "WARNING: Port 5432 is still in use. Attempting to free it..."
+        lsof -ti :5432 | xargs kill -9 2>/dev/null || true
+        sleep 2
+    fi
+elif command -v netstat >/dev/null 2>&1; then
+    if netstat -tlnp 2>/dev/null | grep -q ':5432 '; then
+        echo "WARNING: Port 5432 is still in use. Attempting to free it..."
+        PID=$(netstat -tlnp 2>/dev/null | grep ':5432 ' | awk '{print $7}' | cut -d'/' -f1 | head -1)
+        if [ -n "$PID" ]; then
+            kill -9 "$PID" 2>/dev/null || true
+            sleep 2
+        fi
+    fi
+fi
+
 # Create network if it doesn't exist
 docker network create skysync-net 2>/dev/null || true
 

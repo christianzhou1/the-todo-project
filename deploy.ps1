@@ -183,11 +183,12 @@ Write-Host ""
 Write-Host "[6/7] Uploading files to VPS..." -ForegroundColor Yellow
 
 # Create app directory on VPS
+# Use root user explicitly since we're connecting as root
 $setupCmd = "ssh"
 if ($SSH_OPTS.Count -gt 0) {
     $setupCmd += " " + ($SSH_OPTS -join " ")
 }
-$setupCmd += " $VPS_HOST `"sudo mkdir -p $APP_DIR && sudo chown `$(whoami):`$(whoami) $APP_DIR`""
+$setupCmd += " $VPS_HOST `"mkdir -p $APP_DIR && chown root:root $APP_DIR`""
 Invoke-Expression $setupCmd | Out-Null
 
 # Upload files using SCP

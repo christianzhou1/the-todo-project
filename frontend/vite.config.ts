@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
@@ -17,6 +18,7 @@ export default defineConfig({
       },
     },
   },
+  // @ts-expect-error - Vitest config property, types from vite and vitest conflict
   test: {
     globals: true,
     environment: "jsdom",

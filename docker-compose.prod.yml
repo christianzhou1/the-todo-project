@@ -7,8 +7,10 @@ services:
       POSTGRES_USER: ${DATABASE_USERNAME}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: todo_prod
-    ports:
-      - "5432:5432"  # Expose database port for local development
+    # Port mapping removed - backend connects via Docker network
+    # If you need external access, uncomment and change port to avoid conflicts:
+    # ports:
+    #   - "5433:5432"  # Use different external port to avoid conflict with host PostgreSQL
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
