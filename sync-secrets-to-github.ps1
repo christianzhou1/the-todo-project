@@ -91,11 +91,6 @@ Get-Content ".env.production" | ForEach-Object {
             return
         }
         
-        # Warn about VPS_HOST if it looks like an SSH alias
-        if ($key -eq "VPS_HOST" -and $value -notmatch "^\d+\.\d+\.\d+\.\d+$" -and $value -notmatch "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$") {
-            $warnings += "VPS_HOST is set to '$value' which looks like an SSH alias. GitHub Actions needs an IP address or hostname."
-        }
-        
         $secrets[$key] = $value
     }
 }
@@ -103,6 +98,22 @@ Get-Content ".env.production" | ForEach-Object {
 if ($secrets.Count -eq 0) {
     Write-Host "ERROR: No valid secrets found in .env.production!" -ForegroundColor Red
     exit 1
+}
+
+# Auto-fix VPS_HOST if it's an SSH alias and VPS_IP is available
+if ($secrets.ContainsKey("VPS_HOST") -and $secrets.ContainsKey("VPS_IP")) {
+    $vpsHost = $secrets["VPS_HOST"]
+    $vpsIp = $secrets["VPS_IP"]
+    
+    # Check if VPS_HOST looks like an SSH alias (not an IP or hostname)
+    $isAlias = $vpsHost -notmatch "^\d+\.\d+\.\d+\.\d+$" -and $vpsHost -notmatch "^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    
+    if ($isAlias) {
+        Write-Host "  [INFO] VPS_HOST is set to '$vpsHost' (SSH alias)" -ForegroundColor Yellow
+        Write-Host "  [INFO] Automatically using VPS_IP ($vpsIp) for GitHub Actions" -ForegroundColor Yellow
+        $secrets["VPS_HOST"] = $vpsIp
+        $warnings += "VPS_HOST was automatically changed from '$vpsHost' to '$vpsIp' for GitHub Actions compatibility."
+    }
 }
 
 Write-Host "  [OK] Found $($secrets.Count) secrets to sync" -ForegroundColor Green

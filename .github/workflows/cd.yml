@@ -58,6 +58,7 @@ jobs:
           VPS_IP: ${{ secrets.VPS_IP }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           APP_DIR: ${{ secrets.APP_DIR }}
+          SSL_ENABLED: ${{ secrets.SSL_ENABLED }}
         run: |
           cat > .env.production << EOF
           DATABASE_URL=${DATABASE_URL}
@@ -77,6 +78,7 @@ jobs:
           VPS_IP=${VPS_IP}
           VPS_HOST=${VPS_HOST}
           APP_DIR=${APP_DIR}
+          SSL_ENABLED=${SSL_ENABLED}
           EOF
 
       - name: Prepare deployment
@@ -89,45 +91,18 @@ jobs:
           cp -r frontend/dist deployment/frontend/
           [ -f nginx-ssl.conf ] && cp nginx-ssl.conf deployment/nginx.conf || cp nginx.conf deployment/
 
-      - name: Validate deployment secrets
-        run: |
-          if [ -z "${{ secrets.VPS_USER }}" ]; then
-            echo "ERROR: VPS_USER secret is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.VPS_HOST }}" ]; then
-            echo "ERROR: VPS_HOST secret is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.APP_DIR }}" ]; then
-            echo "ERROR: APP_DIR secret is not set"
-            exit 1
-          fi
-          echo "✓ All required deployment secrets are configured"
-
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-          log-public-key: true
 
       - name: Upload files
-        env:
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          APP_DIR: ${{ secrets.APP_DIR }}
         run: |
-          echo "Uploading files to ${VPS_USER}@${VPS_HOST}:${APP_DIR}/"
-          scp -o StrictHostKeyChecking=no deployment/* ${VPS_USER}@${VPS_HOST}:${APP_DIR}/
-          scp -o StrictHostKeyChecking=no -r deployment/frontend ${VPS_USER}@${VPS_HOST}:${APP_DIR}/
-          scp -o StrictHostKeyChecking=no deploy-remote.sh ${VPS_USER}@${VPS_HOST}:/tmp/deploy-remote.sh
+          scp -o StrictHostKeyChecking=no deployment/* ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
+          scp -o StrictHostKeyChecking=no -r deployment/frontend ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ secrets.APP_DIR }}/
+          scp -o StrictHostKeyChecking=no deploy-remote.sh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/deploy-remote.sh
 
       - name: Deploy
-        env:
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          APP_DIR: ${{ secrets.APP_DIR }}
         run: |
-          echo "Deploying to ${VPS_USER}@${VPS_HOST}"
-          ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} \
-            "chmod +x /tmp/deploy-remote.sh && /tmp/deploy-remote.sh ${APP_DIR} false && rm /tmp/deploy-remote.sh"
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "chmod +x /tmp/deploy-remote.sh && /tmp/deploy-remote.sh ${{ secrets.APP_DIR }} false && rm /tmp/deploy-remote.sh"
